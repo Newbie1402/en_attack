@@ -1,0 +1,28 @@
+# SUPER PROMPT — SnowGraph: The Swallow Defense
+
+## Role and outcome
+Act as a senior game engineer, TypeScript architect, technical artist, UI/UX designer and QA engineer. Build a genuinely playable, polished single-player browser game, not a mockup, dashboard, educational calculator or a reskin of an existing game. Blend lane-based defense, mathematical snowball trajectories, real-time tactics, resource collection and seasonal fantasy gardens.
+
+## Start protocol
+Read `AGENTS.md`, every referenced `.codex/*.md`, and inspect the three reference PNGs in `references/` if visual tooling permits. Use them as the detailed design. Owner's latest changes win. Inspect repository and git status, then implement Phase 00 or resume the first incomplete phase. Preserve existing user work. If starting empty, scaffold the project. Do not merely propose architecture: write code, test and run it. If time/tool constraints prevent completion, checkpoint working code and honest evidence; do not promise background execution.
+
+## Approved experience
+- The main swallow is based on `references/mascot-original.png`: chibi pilot cap, navy/cream feathers, orange wings/scarf, expressive eyes, forked tail. Make distinct frost/heavy variants while preserving character identity. The two approved gameplay concept PNGs define the visual target, not an exact pixel contract. Create layered independent sprites, background, tiles, HUD and VFX.
+- Bright illustrated 2D/2.5D cartoon seasonal gardens, natural square grass/sand/leaf/snow tiles, flowers, water, fences, decorative scenery. No visible Cartesian axes, heavy grid lines, or permanent coordinate clutter on the campaign board. Mathematical local coordinates appear only on hover/selection, with optional training hints. A proper graph grid may exist in Sandbox Lab only.
+- Enemies advance right to left in lanes. Buy/select/relocate swallows on permitted tiles. Manually type a formula `y=f(x)` and fire snowballs following its graph, starting at selected swallow's local origin. Exact same sampled path for preview, flight and collision. No auto-firing, automatic aim or hidden trajectory correction.
+- Lucky Nest periodically produces collectible energy and skill drops. Show egg glow, shake/crack, pop, arc, bounce, hover, click collection and fly-to-HUD with sound. Nothing is credited simply because the animation starts. Skill stock is bounded. Slow, Freeze, Double Damage, Formula Reset are required; Free Move and Perfect Vision optional after core is stable. Typing never automatically pauses. Manual pause exists.
+- Late levels/Boss restrict usage of equivalent formulas across all swallows. Canonicalization and bounded approximate matching prevent obvious aliases; no claim of perfect symbolic equivalence. Reset restores selected formula's full quota and consumes one skill. Make drops predictable enough for fairness.
+- Build a campaign with tutorial, win/loss/retry, unlocks, Sandbox Lab, settings, bestiary, local progress, visual/audio feedback. MVP: six handcrafted levels across spring/winter, including a boss, with 6-chapter content architecture. Full target: 36 levels across spring, summer, autumn, winter, sky, ice citadel. Do not substitute 36 repetitive or untested levels for a polished MVP.
+
+## Tech and architecture
+React + strict TypeScript + Vite + Phaser 3 + Tailwind CSS (menus/HUD only) + Zustand (UI/read-model snapshots) + React Router v6 + math.js parser only + custom bounded AST interpreter + Zod (config/save validation) + Vitest + Playwright. npm lockfile and compatible active Node LTS; verify exact package compatibility before pinning. No backend, database, authentication, Redis, unnecessary networking or ECS library in MVP. Docker/Nginx static hosting at release. Single simulation owner at 60 fixed ticks/sec; seeded RNG; typed commands/events; pure domain; Phaser presentation. Never use JS execution of formulas. No per-frame React re-render. Read `.codex/02-MATH-ENGINE.md` for conservative discontinuity and collision rules.
+
+## Work phases
+Execute phases 00–11 defined in `.codex/06-PHASE-PLAN.md`. Each has explicit Input, Implementation, Output, Verify, Exit Gate. Do not mark a phase complete before its criteria pass. Do not ship TODOs disguised as functionality. Early prototype placeholder art is allowed; later art acceptance needs actual original sprite files, animation and real browser screenshots. If an image-generation tool is unavailable, implement clearly labeled original local vector/procedural assets, preserve asset manifest contracts, and report visual limitations (do not claim concept-level fidelity). Do not use reference images as gameplay textures or slice an entire mockup into interactive UI.
+
+## Definition of done
+- Runnable application, lockfile, README and controls; six authored and playable levels; sandbox and local save; formula safety and collision; economy/skills/waves/boss; accessibility and localization; seasonal visual assets and animation; test evidence, screenshots and performance observations; Docker/Nginx and CI build checks.
+- Commands: `npm ci`, `npm run lint`, `npm run format:check`, `npm run typecheck`, `npm test`, `npm run build`, `npm run test:e2e`, `npm run verify`. Define scripts at bootstrap and run relevant checks at every gate.
+- Final report: actual completed phases and features; files changed; exact checks and outcomes; how to run; known blockers and deviations; next action. Do not claim production-ready if required gates fail or artwork is placeholder quality.
+
+Begin now by inspecting repository state and executing the first incomplete phase.
