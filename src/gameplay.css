@@ -300,6 +300,23 @@
   filter: saturate(0.45);
   opacity: 0.5;
 }
+.unit-roll {
+  min-height: 34px;
+  border: 1px dashed #d79b52;
+  border-radius: 10px;
+  color: #8a562d;
+  background: #fff3d5;
+  cursor: pointer;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+.unit-roll:hover:not(:disabled) {
+  background: #ffe5a9;
+}
+.unit-roll:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
 .unit-card img {
   width: 40px;
   height: 40px;

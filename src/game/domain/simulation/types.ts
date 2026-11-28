@@ -2,11 +2,15 @@ import type { BoardConfig, Cell } from '../board/board';
 import type { FormulaRegistry } from '../math/quota';
 import type { ValidatedFormula, Vec2 } from '../math/types';
 
-export type UnitKind = 'snow' | 'frost' | 'heavy' | 'nest';
-export type EnemyKind = 'fox' | 'rabbit' | 'boar' | 'turtle' | 'raven' | 'wolf' | 'guardian';
+export type UnitKind = 'snow' | 'frost' | 'heavy' | 'shield' | 'fire' | 'witch' | 'nest';
+export type EnemyKind =
+  'fox' | 'rabbit' | 'boar' | 'turtle' | 'raven' | 'wolf' | 'wallJumper' | 'iceGuard' | 'guardian';
 export type SkillKind = 'slow' | 'freeze' | 'doubleDamage' | 'formulaReset';
 export type PickupKind = 'energy' | 'skill';
 export type SimulationMode = 'ready' | 'running' | 'paused' | 'won' | 'lost';
+export type PhaseStatus = 'active' | 'clearing' | 'intermission' | 'complete';
+export type ProjectileEffect = 'normal' | 'chill' | 'burn' | 'hex' | 'ward';
+export type EnemyAbility = 'none' | 'wallJump' | 'iceShield';
 export type AttackState =
   'UNCONFIGURED' | 'READY' | 'WINDUP' | 'COOLDOWN' | 'FORMULA_LOCKED' | 'DISABLED';
 
@@ -31,6 +35,7 @@ export type SimulationCommand =
   | Readonly<{ type: 'moveUnit'; unitId: string; cell: Cell }>
   | Readonly<{ type: 'assignFormula'; unitId: string; expression: string }>
   | Readonly<{ type: 'fire'; unitId: string; expression: string }>
+  | Readonly<{ type: 'rerollShop' }>
   | Readonly<{ type: 'spawnEnemy'; kind: EnemyKind; x: number; lane: number }>
   | Readonly<{ type: 'collectPickup'; pickupId: string }>
   | Readonly<{ type: 'useSkill'; skill: SkillKind; bucketId?: string }>;
@@ -71,6 +76,7 @@ export interface UnitState {
   readonly attackState: AttackState;
   readonly assignedFormula: AssignedFormula | null;
   readonly relocationAvailableTick: number;
+  readonly guardAvailableTick: number;
   readonly production: Readonly<{ nextEnergyTick: number; nextSkillTick: number }> | null;
 }
 
@@ -94,6 +100,7 @@ export interface EconomyRules {
   readonly energyPickupValue: number;
   readonly relocationCost: number;
   readonly relocationCooldownTicks: number;
+  readonly rerollCost: number;
 }
 
 export interface WaveSpawn {
@@ -101,6 +108,14 @@ export interface WaveSpawn {
   readonly kind: EnemyKind;
   readonly x: number;
   readonly lane: number;
+}
+
+export interface WavePhase {
+  readonly id: string;
+  readonly title: string;
+  readonly intro: string;
+  readonly spawns: readonly WaveSpawn[];
+  readonly intermissionTicks: number;
 }
 
 export interface EffectState {
@@ -124,6 +139,17 @@ export interface EnemyState {
   readonly maxShield: number;
   readonly facingX: -1 | 1;
   readonly freezeResistance: number;
+  readonly ability: EnemyAbility;
+  readonly phaseIndex: number;
+  readonly jumpUntilTick: number;
+  readonly jumpUsed: boolean;
+  readonly status: Readonly<{
+    readonly burnUntil: number;
+    readonly burnDamage: number;
+    readonly nextBurnTick: number;
+    readonly chillUntil: number;
+    readonly hexUntil: number;
+  }>;
   readonly radius: number;
   readonly speed: number;
 }
@@ -136,6 +162,7 @@ export interface ProjectileState {
   readonly path: readonly Vec2[];
   readonly horizontalSpeed: number;
   readonly damage: number;
+  readonly effect: ProjectileEffect;
   readonly radius: number;
   readonly maxHits: number;
   readonly progressX: number;
@@ -157,7 +184,15 @@ export interface SimulationState {
   readonly economy: EconomyRules;
   readonly effects: EffectState;
   readonly wavePlan: readonly WaveSpawn[];
+  readonly phasePlan: readonly WavePhase[];
   readonly nextWaveSpawnIndex: number;
+  readonly activePhaseIndex: number;
+  readonly phaseStatus: PhaseStatus;
+  readonly phaseStartedTick: number;
+  readonly phaseIntermissionUntil: number;
+  readonly shopPool: readonly UnitKind[];
+  readonly shopOffers: readonly UnitKind[];
+  readonly shopRoll: number;
   readonly bossPhase: 0 | 1 | 2;
   readonly quotaActive: boolean;
   readonly formulaUseLimit: number;
@@ -187,8 +222,14 @@ export type SimulationEvent =
       shieldRemaining: number;
     }>
   | Readonly<{ type: 'enemyDefeated'; enemyId: string }>
+  | Readonly<{ type: 'enemyBurned'; enemyId: string; damage: number }>
+  | Readonly<{ type: 'enemyWallJumped'; enemyId: string; lane: number }>
+  | Readonly<{ type: 'enemyBlockedByShield'; enemyId: string; unitId: string }>
   | Readonly<{ type: 'enemyBreached'; enemyId: string; heartsRemaining: number }>
   | Readonly<{ type: 'enemySpawned'; enemyId: string }>
+  | Readonly<{ type: 'phaseStarted'; phaseIndex: number; title: string; total: number }>
+  | Readonly<{ type: 'phaseCleared'; phaseIndex: number }>
+  | Readonly<{ type: 'shopRerolled'; offers: readonly UnitKind[] }>
   | Readonly<{ type: 'pickupProduced'; pickupId: string; kind: PickupKind }>
   | Readonly<{ type: 'pickupCollected'; pickupId: string; kind: PickupKind; credited: number }>
   | Readonly<{ type: 'pickupExpired'; pickupId: string }>

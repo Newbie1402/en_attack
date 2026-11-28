@@ -36,6 +36,27 @@ const unitOptions = [
     asset: '/assets/characters/swallows/heavy/portrait.png',
   },
   {
+    kind: 'shield' as const,
+    name: 'Én khiên',
+    role: 'Chặn một lần thủng',
+    cost: 140,
+    asset: '/assets/characters/swallows/shield/swallow-shield.svg',
+  },
+  {
+    kind: 'fire' as const,
+    name: 'Én lửa',
+    role: 'Thiêu theo thời gian',
+    cost: 210,
+    asset: '/assets/characters/swallows/fire/swallow-fire.svg',
+  },
+  {
+    kind: 'witch' as const,
+    name: 'Én phù thủy',
+    role: 'Nguyền tăng sát thương',
+    cost: 260,
+    asset: '/assets/characters/swallows/witch/swallow-witch.svg',
+  },
+  {
     kind: 'nest' as const,
     name: 'Tổ may mắn',
     role: 'Tạo vật phẩm',
@@ -95,6 +116,13 @@ export function BattlefieldPage(): React.JSX.Element {
       }
       if (events.some((event) => event.type === 'matchEnded')) {
         setFeedback('');
+      } else if (events.some((event) => event.type === 'shopRerolled')) {
+        setFeedback('Đội hình mới đã sẵn sàng. Chọn một ô để triển khai.');
+      } else if (events.some((event) => event.type === 'phaseStarted')) {
+        const started = events.find((event) => event.type === 'phaseStarted');
+        if (started?.type === 'phaseStarted') setFeedback(`Pha mới: ${started.title}.`);
+      } else if (events.some((event) => event.type === 'enemyBlockedByShield')) {
+        setFeedback('Én khiên đã chặn một kẻ địch lọt qua.');
       } else if (rejected?.type === 'commandRejected') {
         const messages: Record<string, string> = {
           INVALID_FORMULA: 'Công thức chưa hợp lệ hoặc không đi qua (0, 0).',
@@ -133,8 +161,36 @@ export function BattlefieldPage(): React.JSX.Element {
   const firstUnitId = state.units[0]?.id;
   const selectedUnitId = state.selectedUnitId ?? firstUnitId;
   const selectedUnit = state.units.find((unit) => unit.id === selectedUnitId);
-  const waveCount = state.wavePlan.length;
-  const waveProgress = Math.min(state.nextWaveSpawnIndex, waveCount);
+  const activePhase = state.phasePlan[state.activePhaseIndex];
+  const previousPhaseSpawnCount = state.phasePlan
+    .slice(0, state.activePhaseIndex)
+    .reduce((total, phase) => total + phase.spawns.length, 0);
+  const phaseSpawnProgress = activePhase
+    ? Math.min(
+        activePhase.spawns.length,
+        Math.max(0, state.nextWaveSpawnIndex - previousPhaseSpawnCount),
+      )
+    : 0;
+  const phaseCount = state.phasePlan.length;
+  const phaseNumber = Math.min(state.activePhaseIndex + 1, Math.max(phaseCount, 1));
+  const phaseLabel =
+    state.phaseStatus === 'intermission'
+      ? 'Nghỉ chiến thuật'
+      : state.phaseStatus === 'complete'
+        ? 'Đã dọn sạch'
+        : (activePhase?.title ?? 'Chuẩn bị');
+  const phasePercent =
+    phaseCount === 0
+      ? 0
+      : ((state.activePhaseIndex +
+          (activePhase === undefined || activePhase.spawns.length === 0
+            ? 0
+            : phaseSpawnProgress / activePhase.spawns.length)) /
+          phaseCount) *
+        100;
+  const availableUnitOptions = unitOptions.filter((option) =>
+    state.shopOffers.includes(option.kind),
+  );
   const modeLabel =
     state.mode === 'ready'
       ? 'Sẵn sàng cất cánh'
@@ -246,14 +302,17 @@ export function BattlefieldPage(): React.JSX.Element {
             <h1>{level.title}</h1>
           </div>
         </div>
-        <div className="wave-meter" aria-label={`Tiến độ ${waveProgress} trên ${waveCount} đợt`}>
-          <span className="wave-label">Làn phòng thủ</span>
+        <div
+          className="wave-meter"
+          aria-label={`Pha ${phaseNumber} trên ${phaseCount}: ${phaseLabel}`}
+        >
+          <span className="wave-label">{phaseLabel}</span>
           <strong>
-            {waveProgress}
-            <small> / {waveCount}</small>
+            Pha {phaseNumber}
+            <small> / {phaseCount}</small>
           </strong>
           <span className="wave-track">
-            <span style={{ width: `${waveCount === 0 ? 0 : (waveProgress / waveCount) * 100}%` }} />
+            <span style={{ width: `${phasePercent}%` }} />
           </span>
         </div>
         <div className="resource-cluster">
@@ -287,7 +346,7 @@ export function BattlefieldPage(): React.JSX.Element {
           </div>
           <p className="rail-hint">Chọn một phi công để điều khiển đường bay.</p>
           <div className="unit-shop">
-            {unitOptions.map((option) => (
+            {availableUnitOptions.map((option) => (
               <button
                 className="unit-card"
                 key={option.kind}
@@ -309,6 +368,17 @@ export function BattlefieldPage(): React.JSX.Element {
                 </span>
               </button>
             ))}
+            <button
+              className="unit-roll"
+              type="button"
+              onClick={() => session.dispatch({ type: 'rerollShop' })}
+              disabled={
+                state.energy < state.economy.rerollCost ||
+                !['ready', 'running'].includes(state.mode)
+              }
+            >
+              Đổi đội hình · {state.economy.rerollCost}
+            </button>
           </div>
           <div className="selected-pilot">
             <span className="eyebrow">Đang chọn</span>
@@ -317,9 +387,15 @@ export function BattlefieldPage(): React.JSX.Element {
                 ? 'Én băng'
                 : selectedUnit?.kind === 'heavy'
                   ? 'Én nặng'
-                  : selectedUnit?.kind === 'nest'
-                    ? 'Tổ may mắn'
-                    : 'Én tuyết'}
+                  : selectedUnit?.kind === 'shield'
+                    ? 'Én khiên'
+                    : selectedUnit?.kind === 'fire'
+                      ? 'Én lửa'
+                      : selectedUnit?.kind === 'witch'
+                        ? 'Én phù thủy'
+                        : selectedUnit?.kind === 'nest'
+                          ? 'Tổ may mắn'
+                          : 'Én tuyết'}
             </strong>
             <small>
               {selectedUnit === undefined
@@ -352,9 +428,12 @@ export function BattlefieldPage(): React.JSX.Element {
             <span>
               {state.pickups.length > 0
                 ? `${state.pickups.length} vật phẩm đang chờ bạn`
-                : level.theme === 'winter'
-                  ? 'Gió lạnh · mục tiêu tiến từ phía đông'
-                  : 'Nắng nhẹ · mục tiêu tiến từ phía đông'}
+                : state.phaseStatus === 'intermission'
+                  ? 'Khoảng nghỉ · chuẩn bị đội hình mới'
+                  : (activePhase?.intro ??
+                    (level.theme === 'winter'
+                      ? 'Gió lạnh · mục tiêu tiến từ phía đông'
+                      : 'Nắng nhẹ · mục tiêu tiến từ phía đông'))}
             </span>
           </div>
           <div className="battlefield-stage">

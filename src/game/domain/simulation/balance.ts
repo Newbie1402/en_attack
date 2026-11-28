@@ -1,4 +1,4 @@
-import type { EnemyKind, UnitKind } from './types';
+import type { EnemyKind, ProjectileEffect, UnitKind } from './types';
 
 export interface UnitBalance {
   readonly cost: number;
@@ -7,10 +7,21 @@ export interface UnitBalance {
   readonly horizontalSpeed: number;
   readonly radius: number;
   readonly maxHits: number;
+  readonly projectileEffect: ProjectileEffect;
+  readonly guardCooldownTicks: number;
 }
 
 export const unitBalance: Readonly<Record<UnitKind, UnitBalance>> = {
-  snow: { cost: 100, damage: 25, cooldownTicks: 108, horizontalSpeed: 6, radius: 0.12, maxHits: 2 },
+  snow: {
+    cost: 100,
+    damage: 25,
+    cooldownTicks: 108,
+    horizontalSpeed: 6,
+    radius: 0.12,
+    maxHits: 2,
+    projectileEffect: 'normal',
+    guardCooldownTicks: 0,
+  },
   frost: {
     cost: 175,
     damage: 15,
@@ -18,6 +29,8 @@ export const unitBalance: Readonly<Record<UnitKind, UnitBalance>> = {
     horizontalSpeed: 5,
     radius: 0.15,
     maxHits: 1,
+    projectileEffect: 'chill',
+    guardCooldownTicks: 0,
   },
   heavy: {
     cost: 250,
@@ -26,8 +39,49 @@ export const unitBalance: Readonly<Record<UnitKind, UnitBalance>> = {
     horizontalSpeed: 4,
     radius: 0.22,
     maxHits: 1,
+    projectileEffect: 'normal',
+    guardCooldownTicks: 0,
   },
-  nest: { cost: 50, damage: 0, cooldownTicks: 0, horizontalSpeed: 0, radius: 0, maxHits: 0 },
+  shield: {
+    cost: 140,
+    damage: 12,
+    cooldownTicks: 150,
+    horizontalSpeed: 4.5,
+    radius: 0.16,
+    maxHits: 1,
+    projectileEffect: 'ward',
+    guardCooldownTicks: 12 * 60,
+  },
+  fire: {
+    cost: 210,
+    damage: 18,
+    cooldownTicks: 126,
+    horizontalSpeed: 5.2,
+    radius: 0.14,
+    maxHits: 1,
+    projectileEffect: 'burn',
+    guardCooldownTicks: 0,
+  },
+  witch: {
+    cost: 260,
+    damage: 14,
+    cooldownTicks: 168,
+    horizontalSpeed: 4.2,
+    radius: 0.16,
+    maxHits: 1,
+    projectileEffect: 'hex',
+    guardCooldownTicks: 0,
+  },
+  nest: {
+    cost: 50,
+    damage: 0,
+    cooldownTicks: 0,
+    horizontalSpeed: 0,
+    radius: 0,
+    maxHits: 0,
+    projectileEffect: 'normal',
+    guardCooldownTicks: 0,
+  },
 };
 
 export interface EnemyBalance {
@@ -46,5 +100,21 @@ export const enemyBalance: Readonly<Record<EnemyKind, EnemyBalance>> = {
   turtle: { health: 140, armor: 100, shield: 0, speed: 0.14, radius: 0.36, freezeResistance: 0 },
   raven: { health: 90, armor: 0, shield: 0, speed: 0.36, radius: 0.25, freezeResistance: 0 },
   wolf: { health: 160, armor: 0, shield: 0, speed: 0.24, radius: 0.3, freezeResistance: 0.7 },
+  wallJumper: {
+    health: 125,
+    armor: 0,
+    shield: 0,
+    speed: 0.34,
+    radius: 0.27,
+    freezeResistance: 0.15,
+  },
+  iceGuard: {
+    health: 240,
+    armor: 25,
+    shield: 90,
+    speed: 0.16,
+    radius: 0.38,
+    freezeResistance: 0.85,
+  },
   guardian: { health: 1500, armor: 0, shield: 0, speed: 0.065, radius: 0.48, freezeResistance: 0 },
 };

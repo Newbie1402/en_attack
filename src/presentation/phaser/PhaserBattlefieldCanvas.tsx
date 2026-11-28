@@ -705,7 +705,14 @@ class BattlefieldScene extends Phaser.Scene {
         : unit.kind === 'nest'
           ? Math.sin(state.tick / 18) * 1.5
           : Math.sin(state.tick / 8) * 2.5;
-      const width = layout.cellPx * (unit.kind === 'heavy' ? 0.86 : 0.78);
+      const width =
+        layout.cellPx *
+        (unit.kind === 'heavy' ||
+        unit.kind === 'shield' ||
+        unit.kind === 'fire' ||
+        unit.kind === 'witch'
+          ? 0.86
+          : 0.78);
       sprite.setPosition(center.x, center.y + bob + (authored ? layout.cellPx * 0.24 : 0));
       sprite.setDisplaySize(width, authored ? width : width * 0.8);
       sprite.setAlpha(
@@ -796,9 +803,26 @@ class BattlefieldScene extends Phaser.Scene {
     for (const projectile of state.projectiles) {
       active.add(projectile.id);
       const unit = state.units.find((current) => current.id === projectile.unitId);
-      const kind = unit?.kind === 'frost' ? 'frost' : unit?.kind === 'heavy' ? 'heavy' : 'normal';
-      const authoredKey = `projectile-snowball-${kind}`;
-      const key = this.textures.exists(authoredKey) ? authoredKey : 'projectile-snowball-fallback';
+      const effect = projectile.effect;
+      const authoredKey =
+        effect === 'burn'
+          ? 'projectile-fire-authored'
+          : effect === 'hex'
+            ? 'projectile-hex-authored'
+            : effect === 'ward'
+              ? 'projectile-ward-authored'
+              : `projectile-snowball-${
+                  unit?.kind === 'frost' ? 'frost' : unit?.kind === 'heavy' ? 'heavy' : 'normal'
+                }`;
+      const fallbackKey =
+        effect === 'burn'
+          ? 'projectile-fire-fallback'
+          : effect === 'hex'
+            ? 'projectile-hex-fallback'
+            : effect === 'ward'
+              ? 'projectile-ward-fallback'
+              : 'projectile-snowball-fallback';
+      const key = this.textures.exists(authoredKey) ? authoredKey : fallbackKey;
       let sprite = this.projectileSprites.get(projectile.id);
       if (sprite === undefined) {
         sprite = this.add.image(0, 0, key).setOrigin(0.5).setDepth(10);
@@ -885,6 +909,18 @@ class BattlefieldScene extends Phaser.Scene {
         graphics.lineStyle(2, 0xb8eff7, 0.85);
         graphics.strokeCircle(center.x, center.y, radius * 1.2);
       }
+      if (enemy.status.burnUntil > state.tick) {
+        graphics.fillStyle(0xff7b22, 1);
+        graphics.fillCircle(center.x - radius * 0.8, center.y - radius * 1.6, 4);
+      }
+      if (enemy.status.hexUntil > state.tick) {
+        graphics.fillStyle(0xc084fc, 1);
+        graphics.fillCircle(center.x + radius * 0.8, center.y - radius * 1.6, 4);
+      }
+      if (enemy.jumpUntilTick > state.tick) {
+        graphics.lineStyle(2, 0xf3b54b, 0.9);
+        graphics.strokeCircle(center.x, center.y, radius * 1.35);
+      }
     }
   }
 
@@ -940,6 +976,7 @@ class BattlefieldScene extends Phaser.Scene {
 
   private unitAssetKey(kind: UnitKind): string {
     if (kind === 'nest') return 'nest-lucky-authored';
+    if (kind === 'shield' || kind === 'fire' || kind === 'witch') return `swallow-${kind}-authored`;
     return `swallow-${kind === 'snow' ? 'normal' : kind}-poses`;
   }
 
