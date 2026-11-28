@@ -22,3 +22,15 @@ Branch: `feat/v3-gameplay-evolution`
 - Classified existing SVG/tween work as `first-pass`; atlases, audio and future assets are explicitly
   `external-authoring-pending`.
 - Next exact task: run asset checker, full verification, browser screenshots and update the parent PR.
+
+## 2026-11-28 — Pack 01 art-director handoff
+
+- Added `.codex/34-PACK01-SWALLOW-HANDOFF.md` with the supplied visual brief, 4-pose contract,
+  normalized anchor `(0.46875, 0.921875)`, integration rules and rejection gate.
+- Added `artifacts/asset-preview/pack-01-swallow-contact-sheet-v1.jpg` as received visual evidence.
+- The chat response classified the work as `Runtime Candidate v1` / `needs-revision`; browser QA was not
+  performed by the art handoff.
+- The individual PNG poses, portraits and 1024×256 sheets named by the handoff were not transferred into
+  this checkout, so the runtime manifest and Phaser fallback were intentionally left unchanged.
+- Next exact task: obtain the actual PNG files, validate RGBA/dimensions/alpha/anchor, then integrate and
+  capture the required spring/winter browser evidence before changing runtime status.

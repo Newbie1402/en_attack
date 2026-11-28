@@ -17,6 +17,7 @@ actually in the repository today.
 Run `npm run assets:check` to validate manifest ids and local files. Run the browser suite to verify that
 the runtime loader only requests files classified as present.
 
-The generated Pack 01 concept preview is stored at `artifacts/asset-preview/pack-01-swallow-contact-sheet.png`.
-It is QA/reference evidence only; runtime still uses the reviewed local SVG files until atlas extraction and
-integration are complete.
+The generated Pack 01 concept previews are stored at `artifacts/asset-preview/pack-01-swallow-contact-sheet.png`
+and `artifacts/asset-preview/pack-01-swallow-contact-sheet-v1.jpg`. The art handoff contract is preserved at
+`.codex/34-PACK01-SWALLOW-HANDOFF.md`. They are QA/reference evidence only; runtime still uses the reviewed
+local SVG files because the handoff's individual PNG frames and atlases are not present in this checkout.

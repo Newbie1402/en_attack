@@ -3,6 +3,7 @@
 | Blocker | Impact | Current fallback | Upgrade path |
 |---|---|---|---|
 | No authored sprite atlas export in repository | Swallows/enemies have one-frame SVGs | Phaser deterministic bob, tint and event tweens | Add licensed/original atlas files and update manifest status to `ready` |
+| Pack 01 handoff lacks runtime file transfer | The art chat supplied a contact sheet and handoff contract, but the named per-pose PNGs/sheets are absent from this checkout | Preserve `.codex/34-PACK01-SWALLOW-HANDOFF.md` and the contact sheet as evidence; keep SVG fallback | Transfer and validate the 18 PNG outputs, then integrate one atlas per variant and run browser visual QA |
 | No per-skill pickup illustrations | Skill drops share one readable local icon | HUD labels and color-coded glyphs | Author separate silhouettes for slow/freeze/damage/reset/relocate |
 | No audio files | No fire/impact/collect/ambient sound | Silent gameplay; no autoplay hacks | Add local/licensed files and gesture-gated audio service |
 | No measured long-session profile | Performance exit gate is unverified | Fixed caps and deterministic render loops | Run 10-minute browser profile and record frame/memory evidence |
