@@ -58,3 +58,14 @@ Status: V00 audit PASS; V01–V06 domain/browser slice PASS; later release gates
   audit status: `npm audit --omit=dev` reports 2 moderate React Router advisories remaining; the 3 high
   advisories were removed by upgrading `react-router-dom` to 6.30.6. The suggested React Router 7 fix is
   deferred to a separate migration task because it is breaking.
+
+## 2026-11-28 — Asset pipeline continuation — PASS (integration slice)
+
+- Added manifest-driven runtime preload and machine-readable asset status manifests. `npm run assets:check`
+  validates 27 unique entries and all non-pending local files.
+- Added asset production plan, manifest spec, integration contract, style guide, animation blueprint,
+  visual checklist, blocker report and asset progress record under `.codex/26`–`.codex/33`.
+- Added a generated Pack 01 contact sheet under `artifacts/asset-preview/`; it remains reference-only and
+  is not used as a runtime texture.
+- `npm run verify` exit 0 (10 Vitest files / 33 tests); `npm run test:e2e` exit 0 (10 Chromium tests).
+- Full atlas/audio/per-skill art production remains blocked on production asset source and owner approval.

@@ -1,0 +1,261 @@
+{
+  "version": 1,
+  "game": "snowgraph",
+  "provenance": "repository-original-local-svg",
+  "assets": [
+    {
+      "id": "swallow-normal",
+      "kind": "character",
+      "variant": "normal",
+      "file": "/assets/characters/swallows/normal/swallow-normal.svg",
+      "frameWidth": 160,
+      "frameHeight": 128,
+      "frames": 1,
+      "pivot": { "x": 0.5, "y": 0.5 },
+      "status": "first-pass"
+    },
+    {
+      "id": "swallow-frost",
+      "kind": "character",
+      "variant": "frost",
+      "file": "/assets/characters/swallows/frost/swallow-frost.svg",
+      "frameWidth": 160,
+      "frameHeight": 128,
+      "frames": 1,
+      "pivot": { "x": 0.5, "y": 0.5 },
+      "status": "first-pass"
+    },
+    {
+      "id": "swallow-heavy",
+      "kind": "character",
+      "variant": "heavy",
+      "file": "/assets/characters/swallows/heavy/swallow-heavy.svg",
+      "frameWidth": 176,
+      "frameHeight": 144,
+      "frames": 1,
+      "pivot": { "x": 0.5, "y": 0.5 },
+      "status": "first-pass"
+    },
+    {
+      "id": "nest-lucky",
+      "kind": "nest",
+      "variant": "lucky",
+      "file": "/assets/characters/swallows/nest-lucky.svg",
+      "frameWidth": 160,
+      "frameHeight": 128,
+      "frames": 1,
+      "pivot": { "x": 0.5, "y": 0.5 },
+      "status": "first-pass"
+    },
+    {
+      "id": "enemy-fox",
+      "kind": "enemy",
+      "variant": "fox",
+      "file": "/assets/characters/enemies/fox/fox.svg",
+      "frameWidth": 144,
+      "frameHeight": 128,
+      "frames": 1,
+      "pivot": { "x": 0.5, "y": 0.5 },
+      "status": "first-pass"
+    },
+    {
+      "id": "enemy-rabbit",
+      "kind": "enemy",
+      "variant": "rabbit",
+      "file": "/assets/characters/enemies/rabbit/rabbit.svg",
+      "frameWidth": 144,
+      "frameHeight": 128,
+      "frames": 1,
+      "pivot": { "x": 0.5, "y": 0.5 },
+      "status": "first-pass"
+    },
+    {
+      "id": "enemy-boar",
+      "kind": "enemy",
+      "variant": "armored-boar",
+      "file": "/assets/characters/enemies/boar/boar.svg",
+      "frameWidth": 176,
+      "frameHeight": 144,
+      "frames": 1,
+      "pivot": { "x": 0.5, "y": 0.5 },
+      "status": "first-pass"
+    },
+    {
+      "id": "enemy-turtle",
+      "kind": "enemy",
+      "variant": "crystal-turtle",
+      "file": "/assets/characters/enemies/turtle/turtle.svg",
+      "frameWidth": 176,
+      "frameHeight": 144,
+      "frames": 1,
+      "pivot": { "x": 0.5, "y": 0.5 },
+      "status": "first-pass"
+    },
+    {
+      "id": "enemy-raven",
+      "kind": "enemy",
+      "variant": "raven",
+      "file": "/assets/characters/enemies/raven/raven.svg",
+      "frameWidth": 160,
+      "frameHeight": 144,
+      "frames": 1,
+      "pivot": { "x": 0.5, "y": 0.5 },
+      "status": "first-pass"
+    },
+    {
+      "id": "enemy-wolf",
+      "kind": "enemy",
+      "variant": "frost-wolf",
+      "file": "/assets/characters/enemies/wolf/wolf.svg",
+      "frameWidth": 176,
+      "frameHeight": 144,
+      "frames": 1,
+      "pivot": { "x": 0.5, "y": 0.5 },
+      "status": "first-pass"
+    },
+    {
+      "id": "enemy-guardian",
+      "kind": "boss",
+      "variant": "frost-guardian",
+      "file": "/assets/characters/enemies/boss/guardian.svg",
+      "frameWidth": 224,
+      "frameHeight": 192,
+      "frames": 1,
+      "pivot": { "x": 0.5, "y": 0.5 },
+      "status": "first-pass"
+    },
+    {
+      "id": "pickup-energy",
+      "kind": "pickup",
+      "variant": "energy",
+      "file": "/assets/pickups/energy.svg",
+      "frameWidth": 80,
+      "frameHeight": 80,
+      "frames": 1,
+      "pivot": { "x": 0.5, "y": 0.5 },
+      "status": "first-pass"
+    },
+    {
+      "id": "pickup-skill",
+      "kind": "pickup",
+      "variant": "skill-bundle",
+      "file": "/assets/pickups/skill.svg",
+      "frameWidth": 80,
+      "frameHeight": 80,
+      "frames": 1,
+      "pivot": { "x": 0.5, "y": 0.5 },
+      "status": "first-pass"
+    },
+    {
+      "id": "projectile-snowball",
+      "kind": "projectile",
+      "variant": "normal",
+      "file": "/assets/projectiles/snowball.svg",
+      "frameWidth": 64,
+      "frameHeight": 64,
+      "frames": 1,
+      "pivot": { "x": 0.5, "y": 0.5 },
+      "status": "first-pass"
+    },
+    {
+      "id": "environment-spring",
+      "kind": "environment",
+      "variant": "spring",
+      "file": "/assets/environments/spring/garden-backdrop.svg",
+      "frameWidth": 1200,
+      "frameHeight": 600,
+      "frames": 1,
+      "pivot": { "x": 0, "y": 0 },
+      "status": "first-pass"
+    },
+    {
+      "id": "environment-winter",
+      "kind": "environment",
+      "variant": "winter",
+      "file": "/assets/environments/winter/valley-backdrop.svg",
+      "frameWidth": 1200,
+      "frameHeight": 600,
+      "frames": 1,
+      "pivot": { "x": 0, "y": 0 },
+      "status": "first-pass"
+    },
+
+    {
+      "id": "swallow-animation-atlas",
+      "kind": "character-atlas",
+      "variant": "core-three",
+      "file": "/assets/characters/swallows/atlas/core-three.png",
+      "status": "external-authoring-pending"
+    },
+    {
+      "id": "enemy-snow-golem",
+      "kind": "enemy",
+      "variant": "snow-golem",
+      "file": "/assets/characters/enemies/snow-golem/snow-golem.png",
+      "status": "external-authoring-pending"
+    },
+    {
+      "id": "enemy-mystic-owl",
+      "kind": "enemy",
+      "variant": "mystic-owl",
+      "file": "/assets/characters/enemies/mystic-owl/mystic-owl.png",
+      "status": "external-authoring-pending"
+    },
+    {
+      "id": "enemy-split-slime",
+      "kind": "enemy",
+      "variant": "split-slime",
+      "file": "/assets/characters/enemies/split-slime/split-slime.png",
+      "status": "external-authoring-pending"
+    },
+    {
+      "id": "pickup-slow",
+      "kind": "pickup",
+      "variant": "slow",
+      "file": "/assets/pickups/slow/slow.png",
+      "status": "external-authoring-pending"
+    },
+    {
+      "id": "pickup-freeze",
+      "kind": "pickup",
+      "variant": "freeze",
+      "file": "/assets/pickups/freeze/freeze.png",
+      "status": "external-authoring-pending"
+    },
+    {
+      "id": "pickup-damage-boost",
+      "kind": "pickup",
+      "variant": "damage-boost",
+      "file": "/assets/pickups/damage-boost/damage-boost.png",
+      "status": "external-authoring-pending"
+    },
+    {
+      "id": "pickup-formula-reset",
+      "kind": "pickup",
+      "variant": "formula-reset",
+      "file": "/assets/pickups/formula-reset/formula-reset.png",
+      "status": "external-authoring-pending"
+    },
+    {
+      "id": "pickup-relocate",
+      "kind": "pickup",
+      "variant": "relocate",
+      "file": "/assets/pickups/relocate/relocate.png",
+      "status": "external-authoring-pending"
+    },
+    {
+      "id": "projectile-frost",
+      "kind": "projectile",
+      "variant": "frost",
+      "file": "/assets/projectiles/snowball-frost/snowball-frost.png",
+      "status": "external-authoring-pending"
+    },
+    {
+      "id": "projectile-heavy",
+      "kind": "projectile",
+      "variant": "heavy",
+      "file": "/assets/projectiles/snowball-heavy/snowball-heavy.png",
+      "status": "external-authoring-pending"
+    }
+  ]
+}

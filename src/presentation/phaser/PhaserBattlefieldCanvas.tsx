@@ -18,6 +18,7 @@ import type {
 } from '../../game/domain/simulation/types';
 import type { GameSession } from '../../game/application/session';
 import type { Vec2 } from '../../game/domain/math/types';
+import { runtimeAssetManifest } from '../assets/assetManifest';
 
 export interface PreviewTrajectory {
   readonly origin: Vec2;
@@ -88,64 +89,9 @@ class BattlefieldScene extends Phaser.Scene {
   }
 
   public preload(): void {
-    this.load.svg('swallow-normal', '/assets/characters/swallows/normal/swallow-normal.svg', {
-      width: 160,
-      height: 128,
-    });
-    this.load.svg('swallow-frost', '/assets/characters/swallows/frost/swallow-frost.svg', {
-      width: 160,
-      height: 128,
-    });
-    this.load.svg('swallow-heavy', '/assets/characters/swallows/heavy/swallow-heavy.svg', {
-      width: 176,
-      height: 144,
-    });
-    this.load.svg('nest-lucky', '/assets/characters/swallows/nest-lucky.svg', {
-      width: 160,
-      height: 128,
-    });
-    this.load.svg('enemy-fox', '/assets/characters/enemies/fox/fox.svg', {
-      width: 144,
-      height: 128,
-    });
-    this.load.svg('enemy-rabbit', '/assets/characters/enemies/rabbit/rabbit.svg', {
-      width: 144,
-      height: 128,
-    });
-    this.load.svg('enemy-boar', '/assets/characters/enemies/boar/boar.svg', {
-      width: 176,
-      height: 144,
-    });
-    this.load.svg('enemy-turtle', '/assets/characters/enemies/turtle/turtle.svg', {
-      width: 176,
-      height: 144,
-    });
-    this.load.svg('enemy-raven', '/assets/characters/enemies/raven/raven.svg', {
-      width: 160,
-      height: 144,
-    });
-    this.load.svg('enemy-wolf', '/assets/characters/enemies/wolf/wolf.svg', {
-      width: 176,
-      height: 144,
-    });
-    this.load.svg('enemy-guardian', '/assets/characters/enemies/boss/guardian.svg', {
-      width: 224,
-      height: 192,
-    });
-    this.load.svg('pickup-energy', '/assets/pickups/energy.svg', { width: 80, height: 80 });
-    this.load.svg('pickup-skill', '/assets/pickups/skill.svg', { width: 80, height: 80 });
-    this.load.svg('projectile-snowball', '/assets/projectiles/snowball.svg', {
-      width: 64,
-      height: 64,
-    });
-    this.load.svg('environment-spring', '/assets/environments/spring/garden-backdrop.svg', {
-      width: 1200,
-      height: 600,
-    });
-    this.load.svg('environment-winter', '/assets/environments/winter/valley-backdrop.svg', {
-      width: 1200,
-      height: 600,
-    });
+    for (const asset of runtimeAssetManifest) {
+      this.load.svg(asset.key, asset.file, { width: asset.width, height: asset.height });
+    }
   }
 
   public create(): void {

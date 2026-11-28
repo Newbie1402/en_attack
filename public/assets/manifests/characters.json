@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "status": "partial-first-pass",
+  "characters": [
+    {
+      "id": "swallow-normal",
+      "role": "balanced",
+      "manifestId": "swallow-normal",
+      "animations": ["idle", "throw", "recovery", "victory"],
+      "status": "first-pass"
+    },
+    {
+      "id": "swallow-frost",
+      "role": "slow-specialist",
+      "manifestId": "swallow-frost",
+      "animations": ["idle", "throw", "recovery", "victory"],
+      "status": "first-pass"
+    },
+    {
+      "id": "swallow-heavy",
+      "role": "impact-specialist",
+      "manifestId": "swallow-heavy",
+      "animations": ["idle", "throw", "recovery", "victory"],
+      "status": "first-pass"
+    },
+    {
+      "id": "lucky-nest",
+      "role": "energy-and-skill-production",
+      "manifestId": "nest-lucky",
+      "animations": ["idle", "charge", "pop"],
+      "status": "first-pass"
+    }
+  ],
+  "atlasBlocker": "Three swallow variants have local single-frame SVGs; authored animation atlases are not yet present."
+}

@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "effects": [
+    {
+      "id": "hit-popup",
+      "implementation": "Phaser tween/text",
+      "trigger": "hit",
+      "status": "first-pass"
+    },
+    {
+      "id": "blocked-hit",
+      "implementation": "gold tint plus CHẶN popup",
+      "trigger": "blocked hit",
+      "status": "first-pass"
+    },
+    {
+      "id": "projectile-trail",
+      "implementation": "sampled path line",
+      "trigger": "projectile state",
+      "status": "first-pass"
+    },
+    {
+      "id": "armor-break",
+      "implementation": null,
+      "trigger": "armor reaches zero",
+      "status": "external-authoring-pending"
+    },
+    {
+      "id": "freeze-burst",
+      "implementation": null,
+      "trigger": "freeze skill",
+      "status": "external-authoring-pending"
+    }
+  ]
+}

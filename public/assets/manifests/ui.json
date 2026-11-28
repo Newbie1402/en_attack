@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "implementation": "CSS layout plus local SVG character art; no text is baked into image assets",
+  "surfaces": [
+    "hud",
+    "wave-meter",
+    "unit-shop",
+    "selected-pilot",
+    "formula-lab",
+    "skill-inventory",
+    "result-overlay"
+  ],
+  "status": "first-pass",
+  "blocker": "A separate raster/vector UI kit is not yet authored; current UI is integrated CSS presentation and must not be mislabeled as final art pack."
+}

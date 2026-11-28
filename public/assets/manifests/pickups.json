@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "pickups": [
+    {
+      "id": "energy",
+      "manifestId": "pickup-energy",
+      "hudIcon": "energy-icon",
+      "status": "first-pass"
+    },
+    {
+      "id": "skill-bundle",
+      "manifestId": "pickup-skill",
+      "hudIcon": "skill-glyph",
+      "status": "first-pass"
+    },
+    {
+      "id": "slow",
+      "manifestId": "pickup-slow",
+      "hudIcon": "slow-glyph",
+      "status": "external-authoring-pending"
+    },
+    {
+      "id": "freeze",
+      "manifestId": "pickup-freeze",
+      "hudIcon": "freeze-glyph",
+      "status": "external-authoring-pending"
+    },
+    {
+      "id": "damage-boost",
+      "manifestId": "pickup-damage-boost",
+      "hudIcon": "damage-glyph",
+      "status": "external-authoring-pending"
+    },
+    {
+      "id": "formula-reset",
+      "manifestId": "pickup-formula-reset",
+      "hudIcon": "reset-glyph",
+      "status": "external-authoring-pending"
+    },
+    {
+      "id": "relocate",
+      "manifestId": "pickup-relocate",
+      "hudIcon": "relocate-glyph",
+      "status": "external-authoring-pending"
+    }
+  ]
+}

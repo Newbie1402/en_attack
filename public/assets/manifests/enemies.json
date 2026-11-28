@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "status": "partial-first-pass",
+  "enemies": [
+    { "id": "fox", "manifestId": "enemy-fox", "mechanic": "baseline", "status": "first-pass" },
+    { "id": "rabbit", "manifestId": "enemy-rabbit", "mechanic": "fast", "status": "first-pass" },
+    {
+      "id": "armored-boar",
+      "manifestId": "enemy-boar",
+      "mechanic": "frontal-damage-reduction",
+      "status": "first-pass"
+    },
+    {
+      "id": "crystal-turtle",
+      "manifestId": "enemy-turtle",
+      "mechanic": "armor-layer",
+      "status": "first-pass"
+    },
+    { "id": "raven", "manifestId": "enemy-raven", "mechanic": "lane-bob", "status": "first-pass" },
+    {
+      "id": "frost-wolf",
+      "manifestId": "enemy-wolf",
+      "mechanic": "freeze-resistance",
+      "status": "first-pass"
+    },
+    {
+      "id": "frost-guardian",
+      "manifestId": "enemy-guardian",
+      "mechanic": "boss-phases",
+      "status": "first-pass"
+    },
+    {
+      "id": "snow-golem",
+      "manifestId": "enemy-snow-golem",
+      "mechanic": "future-heavy",
+      "status": "external-authoring-pending"
+    },
+    {
+      "id": "mystic-owl",
+      "manifestId": "enemy-mystic-owl",
+      "mechanic": "future-support",
+      "status": "external-authoring-pending"
+    },
+    {
+      "id": "split-slime",
+      "manifestId": "enemy-split-slime",
+      "mechanic": "future-split",
+      "status": "external-authoring-pending"
+    }
+  ]
+}
