@@ -22,6 +22,18 @@ npm test
 npm run build
 npm run test:e2e
 npm run verify
+npm run test:e2e
+```
+
+## Container smoke test
+
+The release image builds the static SPA with Node, serves it from unprivileged Nginx on port 8080,
+keeps `/assets/*` immutable, and provides `/healthz` plus same-origin security headers.
+
+```bash
+docker build -t snowgraph:local .
+docker run --rm -p 8080:8080 snowgraph:local
+curl -fsS http://127.0.0.1:8080/healthz
 ```
 
 The browser game is intentionally local-only: no backend, analytics, remote assets, or

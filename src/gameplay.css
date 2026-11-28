@@ -178,6 +178,12 @@
   clip-path: polygon(0 20%, 25% 0, 50% 20%, 75% 0, 100% 20%, 50% 100%);
   content: '';
 }
+.heart-icon {
+  background: url('/assets/ui/heart.png') center / contain no-repeat;
+}
+.heart-icon::before {
+  display: none;
+}
 .hud-pause,
 .hud-exit {
   min-height: 38px;
@@ -498,16 +504,16 @@
   background: #8eafd0;
 }
 .slow-glyph {
-  background: #e1b24c;
+  background: url('/assets/pickups/slow/hud.png') center / contain no-repeat;
 }
 .freeze-glyph {
-  background: #6bbfd5;
+  background: url('/assets/pickups/freeze/hud.png') center / contain no-repeat;
 }
 .damage-glyph {
-  background: #e87840;
+  background: url('/assets/pickups/damage-boost/hud.png') center / contain no-repeat;
 }
 .reset-glyph {
-  background: #8b6bb1;
+  background: url('/assets/pickups/formula-reset/hud.png') center / contain no-repeat;
 }
 .formula-lab {
   display: grid;

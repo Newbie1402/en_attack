@@ -1,17 +1,17 @@
 # Asset production and integration progress
 
-Branch: `feat/v3-gameplay-evolution`
+Branch: `main` after `feat/full-asset-runtime-integration`
 
 | Phase | Status | Evidence |
 |---|---|---|
 | A Audit | PASS | Existing docs, references, repo assets, Phaser loader and V3 screenshots reconciled. |
 | B Style | PASS (direction) | `29-STYLE-GUIDE.md` records approved chibi cartoon palette, silhouette, scale and forbidden directions. |
-| C Swallows | PASS (first-pass integration) | Three local SVGs plus nest are in manifest; Phaser now loads from centralized runtime manifest. Atlas remains pending. |
-| D Enemies | PASS (first-pass integration) | Seven local enemy/boss SVGs mapped to mechanics; future cast remains pending. |
-| E Nest/pickups | PASS (first-pass integration) | Energy/skill assets and collection flight are live; per-skill art remains pending. |
-| F Environments | PASS (first-pass integration) | Spring/winter local backdrop and square tile treatments are live. |
-| G VFX/UI/audio | IN PROGRESS | Current Phaser/CSS effects are documented; authored VFX/audio remain pending. |
-| H QA | IN PROGRESS | Manifest checker added; full verify/E2E/visual review must be rerun after this asset-pipeline change. |
+| C Swallows | PASS (runtime candidate) | Three RGBA 4×1 pose sheets, portraits and extracted poses are integrated with event-driven frame changes and SVG fallback. |
+| D Enemies | PASS (runtime candidate) | Six authored idle/portrait pairs are mapped to mechanics; guardian keeps the local fallback. |
+| E Nest/pickups | PASS (runtime candidate) | Nest, six collectible/HUD pairs and collection flight are live; simulation remains authoritative. |
+| F Environments | PASS (runtime candidate) | Spring/winter RGBA tiles and scenic strips render over deterministic square board transforms. |
+| G VFX/UI/audio | PASS (runtime candidate) | Six VFX sheets, UI skins and local WAV music/SFX are loaded; mute/reduced-motion gates are wired. |
+| H QA | PASS WITH HUMAN GATES OPEN | Asset checker, verify, browser, container/CSP, audit and deterministic stress evidence are recorded. |
 
 ## 2026-11-28 — asset pipeline checkpoint
 
@@ -34,3 +34,10 @@ Branch: `feat/v3-gameplay-evolution`
   this checkout, so the runtime manifest and Phaser fallback were intentionally left unchanged.
 - Next exact task: obtain the actual PNG files, validate RGBA/dimensions/alpha/anchor, then integrate and
   capture the required spring/winter browser evidence before changing runtime status.
+
+## 2026-11-28 — Full bundle and release hardening
+
+- Received and integrated Packs 01–06: 78 PNG, 10 WAV, manifests, previews and validation notes.
+- Browser and production-container checks pass; React Router 7.18.7 removes the two moderate audit findings.
+- Remaining status is intentionally `runtime candidate`: owner visual/provenance approval and optional wall-clock
+  memory profiling are not replaced by automated checks.

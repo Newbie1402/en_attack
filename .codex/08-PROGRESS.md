@@ -1,8 +1,7 @@
 # 08 — Progress / checkpoint
 
-Status: Phases 00–03 are complete. Phases 04–07 and 09 are implemented in part and remain open at
-their full exit gates. Phase 08 visual approval, Phase 10 QA sign-off and Phase 11 release packaging
-are not claimed. Reference PNGs were inspected visually and remain outside runtime assets.
+Status: Phases 00–09 have working implementation slices; the remaining completion gates are human art/provenance
+approval and optional wall-clock memory profiling. Phase 10 automated QA and Phase 11 local packaging now pass.
 
 | Phase | Status | Evidence |
 |---|---|---|
@@ -14,10 +13,10 @@ are not claimed. Reference PNGs were inspected visually and remain outside runti
 | 05 Skills | IN PROGRESS | Headless skill fixtures and browser activation gate pass; active-timer/drop-pity presentation remains. |
 | 06 Waves | IN PROGRESS | Authored L1–L4 configs, wave fixtures and browser clock gate pass; reproducible six-level win/loss scripts remain. |
 | 07 Boss | IN PROGRESS | Quota/boss fixtures and L6 browser route gate pass; complete browser strategy/threshold acceptance remains. |
-| 08 Art | NOT STARTED | — |
+| 08 Art | PASS WITH HUMAN APPROVAL OPEN | Packs 01–06 load as runtime candidates; browser visual evidence and asset provenance docs are recorded. |
 | 09 Campaign | IN PROGRESS | Versioned save, unlock-on-win wiring, sandbox, bestiary and settings routes pass unit/browser checks; full campaign replay proof remains. |
-| 10 QA | NOT STARTED | — |
-| 11 Release | NOT STARTED | — |
+| 10 QA | PASS WITH PROFILE LIMITATION | Verify, full browser suite, audit, CSP/container smoke and 10-minute simulated cap profile pass; wall-clock memory trend remains unmeasured. |
+| 11 Release | PASS (LOCAL) | Non-root Nginx container, `/healthz`, deep-route fallback, immutable asset cache and security headers pass locally. |
 
 ## Append for each execution
 - Date, phase, status (IN PROGRESS / PASS / BLOCKED), scope and changes.
@@ -190,3 +189,19 @@ are not claimed. Reference PNGs were inspected visually and remain outside runti
   CSP/security audit, or release packaging. `npm audit --omit=dev` remains deferred with two moderate Router advisories.
 - Next exact task: run the remaining visual art acceptance and performance/security gates, then land this integration
   on a new feature branch PR after reviewing the binary diff.
+
+## 2026-11-28 — Phase 10–11 QA and release hardening — PASS WITH HUMAN GATES OPEN
+
+- Inputs: merged six-pack runtime candidate, Phase 10 matrix, deployment specification and remaining blockers.
+- Changes: settings now control mute/reduced motion/hints in gameplay; Escape cancels board modes or toggles pause;
+  added deterministic 36,000-tick simulation cap profile, `docs/qa-report.md`, React Router 7.18.7 security upgrade,
+  Playwright external-base-URL support, and a non-root Nginx production container with CSP/security headers.
+- Evidence: `npm ci` completed in Docker; `npm audit --omit=dev` exit 0 (0 vulnerabilities); simulation profile pass
+  (36,000 ticks, 110.13 ms, 330 events, caps respected); `docker build -t snowgraph:local .` exit 0; container
+  `/healthz`, `/play/L6`, headers and `uid=101(nginx)` pass; full Playwright suite against the container exit 0
+  (11/11); local source verify remains green after the Router upgrade.
+- Acceptance: A01/A02 settings and Escape paths are implemented, R01 caps are exercised in deterministic simulation,
+  R02 CSP/deep route/local asset smoke passes, and Phase 11 packaging is reproducible locally.
+- Not claimed: final owner visual/provenance approval or a ten-wall-clock-minute browser memory trend. Those are
+  explicit human/optional follow-up gates, not converted into false green evidence.
+- Next exact task: review the QA report and land this hardening branch through a green PR into `main`.

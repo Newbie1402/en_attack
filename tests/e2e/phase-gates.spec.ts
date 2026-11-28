@@ -29,6 +29,21 @@ test('skills become usable only while a match is running', async ({ page }) => {
   await expect(slow).toBeDisabled();
 });
 
+test('Escape cancels board modes and toggles the authoritative pause state', async ({ page }) => {
+  await page.goto('/play/L1');
+  await page.getByRole('button', { name: /Én tuyết/ }).click();
+  await expect(page.getByRole('button', { name: 'Hủy thao tác' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('button', { name: 'Hủy thao tác' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Bắt đầu' }).click();
+  const pauseButton = page.getByRole('button', { name: 'Tạm dừng' });
+  await expect(pauseButton).toBeVisible();
+  await pauseButton.press('Escape');
+  await expect(page.getByRole('button', { name: 'Tiếp tục' })).toBeVisible();
+  await page.getByRole('button', { name: 'Tiếp tục' }).press('Escape');
+  await expect(page.getByRole('button', { name: 'Tạm dừng' })).toBeVisible();
+});
+
 test('authored waves start through the simulation clock', async ({ page }) => {
   await page.goto('/play/L1');
   await page.getByRole('button', { name: 'Bắt đầu' }).click();

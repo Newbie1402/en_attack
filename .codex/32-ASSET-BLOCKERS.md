@@ -2,12 +2,12 @@
 
 | Blocker | Impact | Current fallback | Upgrade path |
 |---|---|---|---|
-| No authored sprite atlas export in repository | Swallows/enemies have one-frame SVGs | Phaser deterministic bob, tint and event tweens | Add licensed/original atlas files and update manifest status to `ready` |
-| Pack 01 handoff lacks runtime file transfer | The art chat supplied a contact sheet and handoff contract, but the named per-pose PNGs/sheets are absent from this checkout | Preserve `.codex/34-PACK01-SWALLOW-HANDOFF.md` and the contact sheet as evidence; keep SVG fallback | Transfer and validate the 18 PNG outputs, then integrate one atlas per variant and run browser visual QA |
-| No per-skill pickup illustrations | Skill drops share one readable local icon | HUD labels and color-coded glyphs | Author separate silhouettes for slow/freeze/damage/reset/relocate |
-| No audio files | No fire/impact/collect/ambient sound | Silent gameplay; no autoplay hacks | Add local/licensed files and gesture-gated audio service |
+| Final authored art approval is open | Runtime candidate PNG sheets/portraits are integrated, but final art approval and rights sign-off are not automated | Authored PNG runtime with reviewed SVG fallback | Complete owner visual and provenance review before public distribution |
+| Pack 01 handoff remains a runtime candidate | Actual pose sheets are present and validated; the handoff still classifies them as `needs-revision` | Typed 4×1 sheets with event-driven pose changes | Review the idle/blink/celebration expansion if production animation fidelity requires it |
+| Per-skill pickup illustrations are integrated but not final-approved | Six collectible/HUD pairs exist and render; final readability review remains human | Per-skill local PNGs plus text labels | Approve or revise silhouettes after manual visual review |
+| Local audio is integrated | Gesture-gated music and event SFX are loaded from local WAVs; rights approval is separate | Mute setting and no-autoplay fallback | Complete provenance/rights review |
 | No measured long-session profile | Performance exit gate is unverified | Fixed caps and deterministic render loops | Run 10-minute browser profile and record frame/memory evidence |
-| React Router 7 audit fixes are breaking | `npm audit --omit=dev` retains 2 moderate findings | 6.30.6 removes 3 high findings | Separate v7 migration with route regression coverage |
+| React Router 7 migration required a compatibility pass | React Router 7.18.7 is now installed and the full route/E2E suite passes | Current v7 API surface is covered by browser tests | Keep router upgrade pinned and revisit only on a future major change |
 
 Do not close a blocker by marking a placeholder complete. The current app remains runnable and the exact
 missing input is recorded here and in `33-ASSET-PROGRESS.md`.
