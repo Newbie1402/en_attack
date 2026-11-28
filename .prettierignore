@@ -1,0 +1,10 @@
+.codex/
+references/
+AGENTS.md
+SUPER_PROMPT.md
+README-FIRST.md
+node_modules/
+dist/
+coverage/
+playwright-report/
+test-results/
