@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "audio": [
+    { "id": "snowball-fire", "file": null, "status": "external-authoring-pending" },
+    { "id": "impact", "file": null, "status": "external-authoring-pending" },
+    { "id": "pickup-collect", "file": null, "status": "external-authoring-pending" },
+    { "id": "skill-activate", "file": null, "status": "external-authoring-pending" },
+    { "id": "victory", "file": null, "status": "external-authoring-pending" },
+    { "id": "defeat", "file": null, "status": "external-authoring-pending" }
+  ],
+  "runtimePolicy": "No autoplay; audio may be wired only after a user gesture and must honor mute settings."
+}

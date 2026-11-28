@@ -88,3 +88,67 @@ are not claimed. Reference PNGs were inspected visually and remain outside runti
   release-candidate status. Npm audit still reports high findings and the Phaser bundle warning remains.
 - Next exact task: finish Phase 04–07 interaction details and reproducible authored-level scripts before
   attempting Phase 08/10 gates.
+
+## 2026-11-28 — Visual overhaul first slice — IN PROGRESS
+
+- Inputs: visual overhaul brief, existing Phase 00–09 implementation, `.codex/01`–`.codex/11`, three
+  reference PNGs and the new `.codex/12`–`.codex/17` design/QA records.
+- Scope: dedicated gameplay viewport, Vietnamese game HUD, local seasonal SVG art, event-driven combat
+  feedback, visible nest pickup collection, formula shortcuts and player-facing lifecycle controls.
+- Changes: `src/gameplay.css`, `BattlefieldPage`, `PhaserBattlefieldCanvas`, local `public/assets`, browser
+  visual/pickup specs and before/after QA captures. Simulation contracts remain the single source of truth.
+- Decisions: D20–D22 in `.codex/09-DECISIONS.md` record fixed viewport composition, local Phaser art and
+  pickup-first pointer priority.
+- Evidence: `npm run verify` exit 0 (lint, format check, strict typecheck, 26 Vitest tests and build);
+  `npm run test:e2e` exit 0 (9 Chromium tests). Visual captures were inspected at 1920×1080, 1440×900,
+  1366×768 and 1280×720, plus winter and real nest-pickup flows. The pickup flow observed energy 150 →
+  175 only after clicking the visible pickup.
+- Not claimed: final commissioned atlases/audio, full animation state coverage, detailed reward metrics,
+  measured performance profile, CSP/security audit or release packaging. See `.codex/17-POLISH-PROGRESS.md`
+  for the V01–V11 visual gate status.
+- Next exact task: complete the remaining V04–V09 lifecycle/animation states, then execute V10 menu/audio
+  and V11 performance/security gates.
+
+## 2026-11-28 — V3 strategic combat evolution — IN PROGRESS
+
+- Inputs: V3 brief plus `.codex/18`–`.codex/25`; existing source, tests, branch history and baseline
+  screenshots were reconciled before editing. V3 supersedes the visible manual Fire loop with automatic
+  fixed-step attacks while retaining a compatibility command for old callers.
+- Changes: per-unit formula assignment/ownership, automatic scheduling and attack states; explicit tile
+  placement and relocation cost/cooldown; shield/armor/health defense pipeline; rabbit/turtle/wolf local
+  art; placement/selection/health-bar feedback; Vietnamese typography and V3 browser evidence paths.
+- Evidence at checkpoint: targeted V3 tests 6 passed; existing simulation tests 20 passed; targeted browser
+  placement, pickup, visual, wave, boss and skill flows passed. Final `npm run verify` and full E2E are still
+  pending after the last interaction and screenshot changes.
+- Not claimed: final commissioned atlases/audio, native drag/drop transfer, complete six-level strategy
+  solvability proof, stress/performance profile, CSP/security audit, Docker/deployment or merge.
+
+## 2026-11-28 — V3 implementation slice verification — PASS
+
+- `npm run verify` exit 0: lint, Prettier check, strict typecheck, 9 Vitest files / 32 tests and production
+  build. Build retains the non-blocking Vite warning for the 2,243 kB minified Phaser chunk.
+- `npm ci` exit 0 from the updated lockfile; npm reports the same 2 moderate React Router advisories.
+- `npm run test:e2e` exit 0: 10 Chromium tests. The placement capture was rerun after a 500 ms Phaser
+  settle and passed; screenshot evidence is under `artifacts/visual-qa/v3-after/` with the prior baseline
+  under `artifacts/visual-qa/v3-before/`.
+- Visual review inspected auto-combat projectile state, exact-tile placement, mixed turtle/boar defenses and
+  winter responsive treatment. No blocker observed. React Router future-flag and Node deprecation warnings
+  remain informational.
+- Exit gate status: V3 formula/ownership/automatic-combat/placement/relocation/enemy-defense slice passes;
+  full art/audio, stress/security, deployment and merge gates remain open and are not claimed. `npm audit
+  --omit=dev` reports 2 moderate React Router advisories after upgrading from 6.30.1 to 6.30.6; the
+  remaining suggested fix is a breaking React Router 7 migration and is deferred.
+
+## 2026-11-28 — Asset production and integration continuation — IN PROGRESS
+
+- Inputs: shared-chat master prompt for full asset pack/integration, existing asset pipeline docs, current
+  local SVG inventory, Phaser loader, V3 screenshots and test baseline.
+- Changes: added `public/assets/manifests/*.json`, `docs/asset-inventory.md`, `.codex/26`–`.codex/33`,
+  a typed runtime asset manifest, manifest path checker and generated Pack 01 visual-development preview.
+  Phaser now preloads only the typed local runtime subset; pending atlas/audio/per-skill art is explicit.
+- Evidence: `npm run assets:check` exit 0 (27 entries); `npm run verify` exit 0 (33 Vitest tests and
+  production build); `npm run test:e2e` exit 0 (10 Chromium tests) after a dedicated 4173 server was
+  used because a separate user Vite process held the project lock at 5173. Existing V3 visual captures
+  were regenerated by that suite; warnings remain React Router future flags and Node deprecations.
+- Not claimed: final atlases, per-skill illustrations, audio, long-session profile, CSP audit or owner
+  visual approval. The generated contact sheet is a reference artifact only.

@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "owner": "Phaser presentation; simulation events remain authoritative",
+  "animations": [
+    {
+      "id": "swallow-idle",
+      "owner": "render",
+      "frames": 1,
+      "fps": 8,
+      "loop": true,
+      "implementation": "deterministic-bob",
+      "status": "first-pass"
+    },
+    {
+      "id": "swallow-throw",
+      "owner": "render",
+      "frames": 1,
+      "fps": 12,
+      "loop": false,
+      "implementation": "shotFired-recoil-tween",
+      "status": "first-pass"
+    },
+    {
+      "id": "enemy-hit",
+      "owner": "render",
+      "frames": 1,
+      "fps": 10,
+      "loop": false,
+      "implementation": "event-tint-and-popup",
+      "status": "first-pass"
+    },
+    {
+      "id": "enemy-defeat",
+      "owner": "render",
+      "frames": 1,
+      "fps": 12,
+      "loop": false,
+      "implementation": "remove-on-domain-event",
+      "status": "first-pass"
+    },
+    {
+      "id": "pickup-collect",
+      "owner": "render",
+      "frames": 1,
+      "fps": 12,
+      "loop": false,
+      "implementation": "event-flight-to-hud",
+      "status": "first-pass"
+    },
+    {
+      "id": "atlas-character-clips",
+      "owner": "external-authoring",
+      "frames": 6,
+      "fps": 10,
+      "loop": true,
+      "implementation": "sprite-atlas",
+      "status": "external-authoring-pending"
+    }
+  ]
+}

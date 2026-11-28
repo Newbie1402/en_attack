@@ -29,7 +29,7 @@ describe('quota and boss phases', () => {
     state = stepSimulation(state, [{ type: 'start' }]).state;
     for (let index = 0; index < 3; index += 1) {
       state = stepSimulation(state, [{ type: 'fire', unitId, expression: '0' }]).state;
-      state = advance(state, 90).state;
+      state = advance(state, 110).state;
     }
     const rejected = stepSimulation(state, [{ type: 'fire', unitId, expression: '0' }]);
     expect(rejected.events.at(0)).toMatchObject({ type: 'commandRejected', reason: 'QUOTA' });
@@ -52,22 +52,9 @@ describe('quota and boss phases', () => {
       { type: 'spawnEnemy', kind: 'guardian', x: 9, lane: 2 },
     ]).state;
     const phaseEvents: string[] = [];
-    const formulas = [
-      '0',
-      '0.02x',
-      '-0.02x',
-      '0.04x',
-      '-0.04x',
-      '0.06x',
-      '-0.06x',
-      '0.08x',
-      '-0.08x',
-      '0.1x',
-    ];
-    for (let index = 0; index < 10; index += 1) {
-      const result = stepSimulation(state, [
-        { type: 'fire', unitId, expression: formulas[index] ?? '0' },
-      ]);
+    for (let index = 0; index < 30; index += 1) {
+      const expression = `${(index + 1) / 100}x`;
+      const result = stepSimulation(state, [{ type: 'fire', unitId, expression }]);
       const advanced = advance(result.state, 220);
       state = advanced.state;
       phaseEvents.push(
@@ -75,6 +62,7 @@ describe('quota and boss phases', () => {
           .filter((event) => event.type === 'bossPhaseChanged')
           .map((event) => `phase-${event.phase}`),
       );
+      if (phaseEvents.includes('phase-2')) break;
     }
     expect(new Set(phaseEvents)).toEqual(new Set(['phase-1', 'phase-2']));
     expect(state.bossPhase).toBe(2);

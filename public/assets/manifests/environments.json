@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "environments": [
+    {
+      "id": "spring-garden",
+      "manifestId": "environment-spring",
+      "biome": "spring",
+      "tiles": "procedural-square-tiles",
+      "status": "first-pass"
+    },
+    {
+      "id": "winter-valley",
+      "manifestId": "environment-winter",
+      "biome": "winter",
+      "tiles": "procedural-square-tiles",
+      "status": "first-pass"
+    },
+    {
+      "id": "summer-coast",
+      "manifestId": null,
+      "biome": "summer",
+      "tiles": "summer-tileset",
+      "status": "external-authoring-pending"
+    },
+    {
+      "id": "autumn-woods",
+      "manifestId": null,
+      "biome": "autumn",
+      "tiles": "autumn-tileset",
+      "status": "external-authoring-pending"
+    }
+  ]
+}

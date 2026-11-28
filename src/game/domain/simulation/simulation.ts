@@ -1,5 +1,6 @@
 import { cellCenter, isDeployable, sameCell } from '../board/board';
 import {
+  behaviorallyEquivalent,
   createFormulaRegistry,
   recordFormulaUse,
   registerFormula,
@@ -7,11 +8,13 @@ import {
 } from '../math/quota';
 import { sampleTrajectory, trajectoryPointAt } from '../math/sampler';
 import { validateFormula } from '../math/engine';
-import type { Vec2 } from '../math/types';
+import type { ValidatedFormula, Vec2 } from '../math/types';
 import type { Cell, Obstacle } from '../board/board';
 import { enemyBalance, unitBalance } from './balance';
 import type {
   CommandRejection,
+  AssignedFormula,
+  EnemyKind,
   EnemyState,
   EffectState,
   EconomyRules,
@@ -25,6 +28,7 @@ import type {
   UnitState,
   SkillKind,
   WaveSpawn,
+  FormulaOwnership,
 } from './types';
 
 const FIXED_DT = 1 / 60;
@@ -38,6 +42,8 @@ const DEFAULT_ECONOMY: EconomyRules = {
   pickupTtlTicks: 12 * 60,
   pickupCap: 12,
   energyPickupValue: 25,
+  relocationCost: 20,
+  relocationCooldownTicks: 3 * 60,
 };
 const SKILL_STOCK_CAP = 3;
 const SLOW_DURATION_TICKS = 8 * 60;
@@ -85,6 +91,54 @@ function nextId(state: SimulationState): Readonly<{ id: string; next: number }> 
   return { id: createId('entity', state.nextId), next: state.nextId + 1 };
 }
 
+function attackStateFor(
+  unit: Readonly<Pick<UnitState, 'kind' | 'assignedFormula' | 'cooldownUntil'>>,
+  tick: number,
+): UnitState['attackState'] {
+  if (unit.kind === 'nest') return 'DISABLED';
+  if (unit.assignedFormula === null) return 'UNCONFIGURED';
+  return unit.cooldownUntil > tick ? 'COOLDOWN' : 'READY';
+}
+
+function assignedFormula(source: string, canonicalKey: string, tick: number): AssignedFormula {
+  return { source, canonicalKey, assignedAtTick: tick };
+}
+
+function formulaOwnersFor(units: readonly UnitState[]): readonly FormulaOwnership[] {
+  return units.flatMap((unit) =>
+    unit.assignedFormula === null
+      ? []
+      : [
+          {
+            canonicalKey: unit.assignedFormula.canonicalKey,
+            unitId: unit.id,
+            source: unit.assignedFormula.source,
+          },
+        ],
+  );
+}
+
+function createEnemy(kind: EnemyKind, id: string, position: Vec2, lane: number): EnemyState {
+  const balance = enemyBalance[kind];
+  return {
+    id,
+    kind,
+    position,
+    previousPosition: position,
+    lane,
+    health: balance.health,
+    maxHealth: balance.health,
+    armor: balance.armor,
+    maxArmor: balance.armor,
+    shield: balance.shield,
+    maxShield: balance.shield,
+    facingX: -1,
+    freezeResistance: balance.freezeResistance,
+    radius: balance.radius,
+    speed: balance.speed,
+  };
+}
+
 export function createSimulation(config: SimulationConfig): SimulationState {
   const board = boardFromConfig(config);
   const economy = economyFromConfig(config);
@@ -101,6 +155,11 @@ export function createSimulation(config: SimulationConfig): SimulationState {
       kind: startingUnit.kind,
       cell: { ...startingUnit.cell },
       cooldownUntil: 0,
+      nextAttackTick: 0,
+      attackIntervalTicks: unitBalance[startingUnit.kind].cooldownTicks,
+      attackState: startingUnit.kind === 'nest' ? 'DISABLED' : 'UNCONFIGURED',
+      assignedFormula: null,
+      relocationAvailableTick: 0,
       production:
         startingUnit.kind === 'nest'
           ? {
@@ -137,6 +196,7 @@ export function createSimulation(config: SimulationConfig): SimulationState {
     formulaUseLimit: config.formulaUseLimit ?? Number.POSITIVE_INFINITY,
     previewAllowed: config.previewAllowed ?? true,
     formulaRegistry: createFormulaRegistry(),
+    formulaOwnership: formulaOwnersFor(units),
     selectedUnitId: units[0]?.id ?? null,
     allWavesSpawned: config.allWavesSpawned ?? false,
     nextId: next,
@@ -154,18 +214,8 @@ function advanceWaves(
   while (nextIndex < state.wavePlan.length) {
     const spawn = state.wavePlan[nextIndex];
     if (spawn === undefined || spawn.tick > state.tick || enemies.length >= MAX_ENEMIES) break;
-    const balance = enemyBalance[spawn.kind];
     const position = { x: spawn.x, y: spawn.lane + 0.5 };
-    const enemy: EnemyState = {
-      id: createId('enemy', nextIdValue),
-      kind: spawn.kind,
-      position,
-      previousPosition: position,
-      lane: spawn.lane,
-      health: balance.health,
-      radius: balance.radius,
-      speed: balance.speed,
-    };
+    const enemy = createEnemy(spawn.kind, createId('enemy', nextIdValue), position, spawn.lane);
     nextIdValue += 1;
     enemies = [...enemies, enemy];
     nextIndex += 1;
@@ -213,6 +263,11 @@ function applyPlaceUnit(
     kind: command.kind,
     cell: { ...command.cell },
     cooldownUntil: state.tick,
+    nextAttackTick: state.tick,
+    attackIntervalTicks: balance.cooldownTicks,
+    attackState: command.kind === 'nest' ? 'DISABLED' : 'UNCONFIGURED',
+    assignedFormula: null,
+    relocationAvailableTick: state.tick,
     production:
       command.kind === 'nest'
         ? {
@@ -226,6 +281,7 @@ function applyPlaceUnit(
       ...state,
       energy: state.energy - balance.cost,
       units: [...state.units, unit],
+      formulaOwnership: formulaOwnersFor([...state.units, unit]),
       nextId: generated.next,
     },
     event: { type: 'unitPlaced', unitId: unit.id, kind: unit.kind, cell: unit.cell },
@@ -241,15 +297,105 @@ function applyMoveUnit(
   if (unit.kind === 'nest') return { state, event: rejection('NEST_STATIONARY') };
   if (state.mode !== 'ready' && state.mode !== 'running')
     return { state, event: rejection('INVALID_MODE') };
+  if (state.tick < unit.relocationAvailableTick) {
+    return { state, event: rejection('RELOCATION_COOLDOWN') };
+  }
+  if (state.energy < state.economy.relocationCost) {
+    return { state, event: rejection('INSUFFICIENT_ENERGY') };
+  }
   if (unitAtCell(state, command.cell) !== undefined || !isDeployable(command.cell, state.board)) {
     return { state, event: rejection('FORBIDDEN_CELL') };
   }
   const units = state.units.map((current) =>
-    current.id === unit.id ? { ...current, cell: { ...command.cell } } : current,
+    current.id === unit.id
+      ? {
+          ...current,
+          cell: { ...command.cell },
+          relocationAvailableTick: state.tick + state.economy.relocationCooldownTicks,
+        }
+      : current,
   );
   return {
-    state: { ...state, units },
+    state: { ...state, energy: state.energy - state.economy.relocationCost, units },
     event: { type: 'unitMoved', unitId: unit.id, cell: { ...command.cell } },
+  };
+}
+
+function applyAssignFormula(
+  state: SimulationState,
+  command: Extract<SimulationCommand, { type: 'assignFormula' }>,
+): Readonly<{ state: SimulationState; event: SimulationEvent }> {
+  if (state.mode !== 'ready' && state.mode !== 'running' && state.mode !== 'paused') {
+    return { state, event: rejection('INVALID_MODE') };
+  }
+  const unit = state.units.find((current) => current.id === command.unitId);
+  if (unit === undefined) return { state, event: rejection('NO_UNIT') };
+  if (unit.kind === 'nest') return { state, event: rejection('NO_SHOT_UNIT') };
+  const result = validateFormula(command.expression);
+  if (!result.ok) return { state, event: rejection('INVALID_FORMULA') };
+
+  for (const other of state.units) {
+    if (other.id === unit.id || other.assignedFormula === null) continue;
+    const otherResult = validateFormula(other.assignedFormula.source);
+    if (
+      otherResult.ok &&
+      behaviorallyEquivalent(result.formula, otherResult.formula, {
+        maxU: state.board.columns,
+        seed: state.seed,
+      })
+    ) {
+      return {
+        state,
+        event: {
+          type: 'formulaConflict',
+          unitId: unit.id,
+          ownerUnitId: other.id,
+          source: result.formula.source,
+        },
+      };
+    }
+  }
+
+  if (
+    unit.assignedFormula?.source === result.formula.source &&
+    unit.assignedFormula.canonicalKey === result.formula.canonicalKey
+  ) {
+    return {
+      state,
+      event: {
+        type: 'formulaAssigned',
+        unitId: unit.id,
+        source: result.formula.source,
+        idempotent: true,
+      },
+    };
+  }
+
+  const nextAssignedFormula = assignedFormula(
+    result.formula.source,
+    result.formula.canonicalKey,
+    state.tick,
+  );
+  const units = state.units.map((current) =>
+    current.id === unit.id
+      ? {
+          ...current,
+          assignedFormula: nextAssignedFormula,
+          attackState: attackStateFor(
+            { ...current, assignedFormula: nextAssignedFormula },
+            state.tick,
+          ),
+        }
+      : current,
+  );
+  return {
+    state: { ...state, units, formulaOwnership: formulaOwnersFor(units) },
+    event: {
+      type: 'formulaAssigned',
+      unitId: unit.id,
+      source: result.formula.source,
+      idempotent: false,
+    },
   };
 }
 
@@ -257,31 +403,70 @@ function applyFire(
   state: SimulationState,
   command: Extract<SimulationCommand, { type: 'fire' }>,
   formulaUseLimit: number,
-): Readonly<{ state: SimulationState; event: SimulationEvent }> {
-  if (state.mode !== 'running') return { state, event: rejection('INVALID_MODE') };
+): Readonly<{ state: SimulationState; events: readonly SimulationEvent[] }> {
+  if (state.mode !== 'running') return { state, events: [rejection('INVALID_MODE')] };
   const unit = state.units.find((current) => current.id === command.unitId);
-  if (unit === undefined) return { state, event: rejection('NO_UNIT') };
-  if (unit.kind === 'nest') return { state, event: rejection('NO_SHOT_UNIT') };
-  if (unit.cooldownUntil > state.tick) return { state, event: rejection('COOLDOWN') };
-  if (state.projectiles.length >= MAX_PROJECTILES)
-    return { state, event: rejection('PROJECTILE_CAPACITY') };
-  const formulaResult = validateFormula(command.expression);
-  if (!formulaResult.ok) return { state, event: rejection('INVALID_FORMULA') };
-  const registryResult = registerFormula(state.formulaRegistry, formulaResult.formula, {
+  if (unit === undefined) return { state, events: [rejection('NO_UNIT')] };
+  const assignment =
+    unit.assignedFormula?.source === command.expression
+      ? { state, event: null }
+      : applyAssignFormula(state, {
+          type: 'assignFormula',
+          unitId: command.unitId,
+          expression: command.expression,
+        });
+  if (
+    assignment.event?.type === 'commandRejected' ||
+    assignment.event?.type === 'formulaConflict'
+  ) {
+    return { state: assignment.state, events: [assignment.event] };
+  }
+  const assignedState = assignment.state;
+  const assignedUnit = assignedState.units.find((current) => current.id === command.unitId);
+  if (assignedUnit === undefined || assignedUnit.assignedFormula === null) {
+    return { state: assignedState, events: [rejection('NO_FORMULA')] };
+  }
+  if (assignedUnit.cooldownUntil > assignedState.tick) {
+    return { state: assignedState, events: [rejection('COOLDOWN')] };
+  }
+  if (assignedState.projectiles.length >= MAX_PROJECTILES) {
+    return { state: assignedState, events: [rejection('PROJECTILE_CAPACITY')] };
+  }
+  const formulaResult = validateFormula(assignedUnit.assignedFormula.source);
+  if (!formulaResult.ok) return { state: assignedState, events: [rejection('INVALID_FORMULA')] };
+  return emitShot(
+    assignedState,
+    assignedUnit,
+    formulaResult.formula,
+    formulaUseLimit,
+    assignment.event,
+  );
+}
+
+function emitShot(
+  state: SimulationState,
+  unit: UnitState,
+  formula: ValidatedFormula,
+  formulaUseLimit: number,
+  assignmentEvent: SimulationEvent | null = null,
+): Readonly<{ state: SimulationState; events: readonly SimulationEvent[] }> {
+  const registryResult = registerFormula(state.formulaRegistry, formula, {
     maxU: state.board.columns,
     seed: state.seed,
   });
-  if (!registryResult.ok) return { state, event: rejection('INVALID_FORMULA') };
-  if (registryResult.bucket.uses >= formulaUseLimit) return { state, event: rejection('QUOTA') };
+  if (!registryResult.ok) return { state, events: [rejection('INVALID_FORMULA')] };
+  if (registryResult.bucket.uses >= formulaUseLimit) {
+    return { state, events: [rejection('QUOTA')] };
+  }
   const origin = cellCenter(unit.cell);
-  const localPath = sampleTrajectory(formulaResult.formula.expression, {
+  const localPath = sampleTrajectory(formula.expression, {
     maxU: state.board.columns - origin.x,
     minV: -origin.y,
     maxV: state.board.rows - origin.y,
   });
-  if (localPath.points.length < 2) return { state, event: rejection('NO_PATH') };
+  if (localPath.points.length < 2) return { state, events: [rejection('NO_PATH')] };
   const useResult = recordFormulaUse(registryResult.registry, registryResult.bucket.id);
-  if (!useResult.ok) return { state, event: rejection('INVALID_FORMULA') };
+  if (!useResult.ok) return { state, events: [rejection('INVALID_FORMULA')] };
   const generated = nextId(state);
   const balance = unitBalance[unit.kind];
   const damage = state.effects.doubleDamageArmed ? balance.damage * 2 : balance.damage;
@@ -289,7 +474,7 @@ function applyFire(
     id: generated.id,
     unitId: unit.id,
     origin,
-    formula: formulaResult.formula,
+    formula,
     path: localPath.points,
     horizontalSpeed: balance.horizontalSpeed,
     damage,
@@ -301,7 +486,12 @@ function applyFire(
   };
   const units = state.units.map((current) =>
     current.id === unit.id
-      ? { ...current, cooldownUntil: state.tick + balance.cooldownTicks }
+      ? {
+          ...current,
+          cooldownUntil: state.tick + balance.cooldownTicks,
+          nextAttackTick: state.tick + balance.cooldownTicks,
+          attackState: 'COOLDOWN' as const,
+        }
       : current,
   );
   return {
@@ -315,7 +505,15 @@ function applyFire(
         : state.effects,
       nextId: generated.next,
     },
-    event: { type: 'shotFired', projectileId: projectile.id, unitId: unit.id },
+    events: [
+      ...(assignmentEvent === null ? [] : [assignmentEvent]),
+      {
+        type: 'shotFired',
+        projectileId: projectile.id,
+        unitId: unit.id,
+        formulaKey: formula.canonicalKey,
+      },
+    ],
   };
 }
 
@@ -325,18 +523,8 @@ function applySpawnEnemy(
 ): Readonly<{ state: SimulationState; event: SimulationEvent }> {
   if (state.enemies.length >= MAX_ENEMIES) return { state, event: rejection('NO_ENEMY_CAPACITY') };
   const generated = nextId(state);
-  const balance = enemyBalance[command.kind];
   const position = { x: command.x, y: command.lane + 0.5 };
-  const enemy: EnemyState = {
-    id: generated.id,
-    kind: command.kind,
-    position,
-    previousPosition: position,
-    lane: command.lane,
-    health: balance.health,
-    radius: balance.radius,
-    speed: balance.speed,
-  };
+  const enemy = createEnemy(command.kind, generated.id, position, command.lane);
   return {
     state: { ...state, enemies: [...state.enemies, enemy], nextId: generated.next },
     event: { type: 'enemySpawned', enemyId: enemy.id },
@@ -493,10 +681,16 @@ function applyUseSkill(
     if (command.bucketId === undefined) return { state, event: rejection('RESET_INVALID') };
     const reset = resetFormulaBucket(state.formulaRegistry, command.bucketId);
     if (!reset.ok) return { state, event: rejection('RESET_INVALID') };
+    const resetUnits = state.units.map((unit) =>
+      unit.assignedFormula?.canonicalKey === reset.bucket.representative.canonicalKey
+        ? { ...unit, attackState: attackStateFor(unit, state.tick) }
+        : unit,
+    );
     return {
       state: {
         ...state,
         formulaRegistry: reset.registry,
+        units: resetUnits,
         skillStock: decrementSkillStock(state.skillStock, command.skill),
       },
       event: { type: 'formulaReset', bucketId: command.bucketId },
@@ -520,6 +714,44 @@ function applyUseSkill(
     state: { ...state, effects, skillStock: decrementSkillStock(state.skillStock, command.skill) },
     event: { type: 'skillActivated', skill: command.skill },
   };
+}
+
+function scheduleAutomaticAttacks(
+  state: SimulationState,
+): Readonly<{ state: SimulationState; events: readonly SimulationEvent[] }> {
+  if (state.enemies.length === 0) return { state, events: [] };
+  let current = state;
+  const events: SimulationEvent[] = [];
+  const formulaUseLimit = current.quotaActive ? current.formulaUseLimit : Number.POSITIVE_INFINITY;
+  for (const candidate of state.units) {
+    const unit = current.units.find((item) => item.id === candidate.id);
+    if (
+      unit === undefined ||
+      unit.kind === 'nest' ||
+      unit.assignedFormula === null ||
+      unit.attackState === 'FORMULA_LOCKED' ||
+      unit.cooldownUntil > current.tick
+    ) {
+      continue;
+    }
+    const formulaResult = validateFormula(unit.assignedFormula.source);
+    if (!formulaResult.ok) continue;
+    const result = emitShot(current, unit, formulaResult.formula, formulaUseLimit);
+    const rejectionEvent = result.events.find((event) => event.type === 'commandRejected');
+    if (rejectionEvent?.type === 'commandRejected' && rejectionEvent.reason === 'QUOTA') {
+      current = {
+        ...current,
+        units: current.units.map((item) =>
+          item.id === unit.id ? { ...item, attackState: 'FORMULA_LOCKED' } : item,
+        ),
+      };
+      events.push(rejectionEvent);
+      continue;
+    }
+    current = result.state;
+    events.push(...result.events);
+  }
+  return { state: current, events };
 }
 
 function applyCommand(
@@ -550,9 +782,13 @@ function applyCommand(
       const result = applyMoveUnit(state, command);
       return { state: result.state, events: [result.event] };
     }
+    case 'assignFormula': {
+      const result = applyAssignFormula(state, command);
+      return { state: result.state, events: [result.event] };
+    }
     case 'fire': {
       const result = applyFire(state, command, formulaUseLimit);
-      return { state: result.state, events: [result.event] };
+      return { state: result.state, events: result.events };
     }
     case 'spawnEnemy': {
       const result = applySpawnEnemy(state, command);
@@ -704,28 +940,74 @@ function polylineContacts(
   });
 }
 
+function projectileTravelDirection(projectile: ProjectileState, localX: number): Vec2 {
+  const start = projectileWorldPoint(projectile, Math.max(0, localX - 0.08));
+  const end = projectileWorldPoint(projectile, localX + 0.08);
+  const left = start ?? projectile.origin;
+  const right = end ?? { x: left.x + 1, y: left.y };
+  const length = Math.hypot(right.x - left.x, right.y - left.y) || 1;
+  return { x: (right.x - left.x) / length, y: (right.y - left.y) / length };
+}
+
+function resolveProjectileDamage(
+  enemy: EnemyState,
+  projectile: ProjectileState,
+  contactProgress: number,
+): Readonly<{ enemy: EnemyState; healthDamage: number; absorbed: number; blocked: boolean }> {
+  let remaining = projectile.damage;
+  const originalDamage = remaining;
+  if (enemy.kind === 'boar') {
+    const direction = projectileTravelDirection(projectile, contactProgress);
+    const incomingFrom = { x: -direction.x, y: -direction.y };
+    const facingDot = incomingFrom.x * enemy.facingX + incomingFrom.y * 0;
+    if (facingDot >= Math.cos(Math.PI / 3)) remaining = Math.round(remaining * 0.35);
+  }
+  const shieldDamage = Math.min(enemy.shield, remaining);
+  remaining -= shieldDamage;
+  const armorDamage = Math.min(enemy.armor, remaining);
+  remaining -= armorDamage;
+  const healthDamage = Math.min(enemy.health, remaining);
+  const nextEnemy = {
+    ...enemy,
+    shield: enemy.shield - shieldDamage,
+    armor: enemy.armor - armorDamage,
+    health: enemy.health - healthDamage,
+  };
+  return {
+    enemy: nextEnemy,
+    healthDamage,
+    absorbed: originalDamage - healthDamage,
+    blocked: originalDamage > healthDamage,
+  };
+}
+
 function advanceState(
   state: SimulationState,
 ): Readonly<{ state: SimulationState; events: readonly SimulationEvent[] }> {
   if (state.mode !== 'running') return { state, events: [] };
   const scheduled = advanceWaves(state);
   const produced = advanceProduction(scheduled.state);
-  const baseState = produced.state;
-  const enemyTimeFactor =
-    baseState.tick < baseState.effects.freezeUntil
-      ? 0
-      : baseState.tick < baseState.effects.slowUntil
-        ? 0.4
-        : 1;
-  const enemies = baseState.enemies.map((enemy) => ({
-    ...enemy,
-    previousPosition: enemy.position,
-    position: {
-      x: Math.max(0, enemy.position.x - enemy.speed * FIXED_DT * enemyTimeFactor),
-      y: enemy.position.y,
-    },
-  }));
-  const events: SimulationEvent[] = [...scheduled.events, ...produced.events];
+  const automatic = scheduleAutomaticAttacks(produced.state);
+  const baseState = automatic.state;
+  const enemies = baseState.enemies.map((enemy) => {
+    const enemyTimeFactor =
+      baseState.tick < baseState.effects.freezeUntil
+        ? enemy.freezeResistance
+        : baseState.tick < baseState.effects.slowUntil
+          ? 0.4
+          : 1;
+    const laneShift =
+      enemy.kind === 'raven' ? Math.sin((baseState.tick + enemy.id.length * 17) / 38) * 0.42 : 0;
+    return {
+      ...enemy,
+      previousPosition: enemy.position,
+      position: {
+        x: Math.max(0, enemy.position.x - enemy.speed * FIXED_DT * enemyTimeFactor),
+        y: enemy.lane + 0.5 + laneShift,
+      },
+    };
+  });
+  const events: SimulationEvent[] = [...scheduled.events, ...produced.events, ...automatic.events];
   const defeated = new Set<string>();
   const projectiles: ProjectileState[] = [];
   let currentEnemies = enemies;
@@ -760,22 +1042,29 @@ function advanceState(
       if (enemy === undefined) continue;
       hitIds.push(enemy.id);
       hitCount += 1;
-      const nextHealth = enemy.health - projectile.damage;
+      const contactProgress =
+        projectile.progressX + (nextProgressX - projectile.progressX) * contact.time;
+      const damageResult = resolveProjectileDamage(enemy, projectile, contactProgress);
+      const nextHealth = damageResult.enemy.health;
       currentEnemies = currentEnemies.map((current) =>
-        current.id === enemy.id ? { ...current, health: nextHealth } : current,
+        current.id === enemy.id ? damageResult.enemy : current,
       );
       events.push({
         type: 'hit',
         projectileId: projectile.id,
         enemyId: enemy.id,
-        damage: projectile.damage,
+        damage: damageResult.healthDamage,
+        absorbed: damageResult.absorbed,
+        blocked: damageResult.blocked,
+        armorRemaining: damageResult.enemy.armor,
+        shieldRemaining: damageResult.enemy.shield,
       });
       if (nextHealth <= 0) {
         defeated.add(enemy.id);
         events.push({ type: 'enemyDefeated', enemyId: enemy.id });
       }
       if (enemy.kind === 'guardian') {
-        const healthRatio = nextHealth / enemyBalance.guardian.health;
+        const healthRatio = nextHealth / enemy.maxHealth;
         if (healthRatio <= 0.7 && bossPhase < 1) {
           bossPhase = 1;
           quotaActive = true;
@@ -796,16 +1085,7 @@ function advanceState(
           for (const lane of [1, 3]) {
             if (currentEnemies.length >= MAX_ENEMIES) break;
             const position = { x: Math.min(state.board.columns - 0.5, 8.5), y: lane + 0.5 };
-            const add: EnemyState = {
-              id: createId('enemy', nextIdValue),
-              kind: 'fox',
-              position,
-              previousPosition: position,
-              lane,
-              health: enemyBalance.fox.health,
-              radius: enemyBalance.fox.radius,
-              speed: enemyBalance.fox.speed,
-            };
+            const add = createEnemy('fox', createId('enemy', nextIdValue), position, lane);
             nextIdValue += 1;
             currentEnemies = [...currentEnemies, add];
             events.push({ type: 'enemySpawned', enemyId: add.id });
@@ -842,6 +1122,13 @@ function advanceState(
   const lost = hearts <= 0;
   const mode = lost ? 'lost' : won ? 'won' : 'running';
   if (mode === 'won' || mode === 'lost') events.push({ type: 'matchEnded', result: mode });
+  const units = baseState.units.map((unit) => ({
+    ...unit,
+    attackState:
+      unit.attackState === 'FORMULA_LOCKED'
+        ? unit.attackState
+        : attackStateFor(unit, baseState.tick),
+  }));
   return {
     state: {
       ...baseState,
@@ -852,6 +1139,7 @@ function advanceState(
       previewAllowed,
       nextId: nextIdValue,
       hearts,
+      units,
       enemies: currentEnemies,
       projectiles,
       mode,

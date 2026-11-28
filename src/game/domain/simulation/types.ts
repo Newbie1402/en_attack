@@ -3,10 +3,24 @@ import type { FormulaRegistry } from '../math/quota';
 import type { ValidatedFormula, Vec2 } from '../math/types';
 
 export type UnitKind = 'snow' | 'frost' | 'heavy' | 'nest';
-export type EnemyKind = 'fox' | 'boar' | 'raven' | 'guardian';
+export type EnemyKind = 'fox' | 'rabbit' | 'boar' | 'turtle' | 'raven' | 'wolf' | 'guardian';
 export type SkillKind = 'slow' | 'freeze' | 'doubleDamage' | 'formulaReset';
 export type PickupKind = 'energy' | 'skill';
 export type SimulationMode = 'ready' | 'running' | 'paused' | 'won' | 'lost';
+export type AttackState =
+  'UNCONFIGURED' | 'READY' | 'WINDUP' | 'COOLDOWN' | 'FORMULA_LOCKED' | 'DISABLED';
+
+export interface AssignedFormula {
+  readonly source: string;
+  readonly canonicalKey: string;
+  readonly assignedAtTick: number;
+}
+
+export interface FormulaOwnership {
+  readonly canonicalKey: string;
+  readonly unitId: string;
+  readonly source: string;
+}
 
 export type SimulationCommand =
   | Readonly<{ type: 'start' }>
@@ -15,6 +29,7 @@ export type SimulationCommand =
   | Readonly<{ type: 'placeUnit'; kind: UnitKind; cell: Cell }>
   | Readonly<{ type: 'selectUnit'; unitId: string | null }>
   | Readonly<{ type: 'moveUnit'; unitId: string; cell: Cell }>
+  | Readonly<{ type: 'assignFormula'; unitId: string; expression: string }>
   | Readonly<{ type: 'fire'; unitId: string; expression: string }>
   | Readonly<{ type: 'spawnEnemy'; kind: EnemyKind; x: number; lane: number }>
   | Readonly<{ type: 'collectPickup'; pickupId: string }>
@@ -31,6 +46,8 @@ export type CommandRejection =
   | 'INVALID_FORMULA'
   | 'PROJECTILE_CAPACITY'
   | 'NO_SHOT_UNIT'
+  | 'NO_FORMULA'
+  | 'FORMULA_CONFLICT'
   | 'QUOTA'
   | 'NO_ENEMY_CAPACITY'
   | 'PICKUP_NOT_FOUND'
@@ -41,6 +58,7 @@ export type CommandRejection =
   | 'SKILL_EMPTY'
   | 'SKILL_COOLDOWN'
   | 'SKILL_ALREADY_ACTIVE'
+  | 'RELOCATION_COOLDOWN'
   | 'RESET_INVALID';
 
 export interface UnitState {
@@ -48,6 +66,11 @@ export interface UnitState {
   readonly kind: UnitKind;
   readonly cell: Cell;
   readonly cooldownUntil: number;
+  readonly nextAttackTick: number;
+  readonly attackIntervalTicks: number;
+  readonly attackState: AttackState;
+  readonly assignedFormula: AssignedFormula | null;
+  readonly relocationAvailableTick: number;
   readonly production: Readonly<{ nextEnergyTick: number; nextSkillTick: number }> | null;
 }
 
@@ -69,6 +92,8 @@ export interface EconomyRules {
   readonly pickupTtlTicks: number;
   readonly pickupCap: number;
   readonly energyPickupValue: number;
+  readonly relocationCost: number;
+  readonly relocationCooldownTicks: number;
 }
 
 export interface WaveSpawn {
@@ -92,6 +117,13 @@ export interface EnemyState {
   readonly previousPosition: Vec2;
   readonly lane: number;
   readonly health: number;
+  readonly maxHealth: number;
+  readonly armor: number;
+  readonly maxArmor: number;
+  readonly shield: number;
+  readonly maxShield: number;
+  readonly facingX: -1 | 1;
+  readonly freezeResistance: number;
   readonly radius: number;
   readonly speed: number;
 }
@@ -131,6 +163,7 @@ export interface SimulationState {
   readonly formulaUseLimit: number;
   readonly previewAllowed: boolean;
   readonly formulaRegistry: FormulaRegistry;
+  readonly formulaOwnership: readonly FormulaOwnership[];
   readonly selectedUnitId: string | null;
   readonly allWavesSpawned: boolean;
   readonly nextId: number;
@@ -140,8 +173,19 @@ export interface SimulationState {
 export type SimulationEvent =
   | Readonly<{ type: 'unitPlaced'; unitId: string; kind: UnitKind; cell: Cell }>
   | Readonly<{ type: 'unitMoved'; unitId: string; cell: Cell }>
-  | Readonly<{ type: 'shotFired'; projectileId: string; unitId: string }>
-  | Readonly<{ type: 'hit'; projectileId: string; enemyId: string; damage: number }>
+  | Readonly<{ type: 'formulaAssigned'; unitId: string; source: string; idempotent: boolean }>
+  | Readonly<{ type: 'formulaConflict'; unitId: string; ownerUnitId: string; source: string }>
+  | Readonly<{ type: 'shotFired'; projectileId: string; unitId: string; formulaKey: string }>
+  | Readonly<{
+      type: 'hit';
+      projectileId: string;
+      enemyId: string;
+      damage: number;
+      absorbed: number;
+      blocked: boolean;
+      armorRemaining: number;
+      shieldRemaining: number;
+    }>
   | Readonly<{ type: 'enemyDefeated'; enemyId: string }>
   | Readonly<{ type: 'enemyBreached'; enemyId: string; heartsRemaining: number }>
   | Readonly<{ type: 'enemySpawned'; enemyId: string }>
