@@ -1,6 +1,6 @@
 # 08 — Progress / checkpoint
 
-Status: Phases 00–09 have working implementation slices; the remaining completion gates are human art/provenance
+Status: Phases 00–09 have working implementation slices; strategic combat extension is now integrated; the remaining completion gates are human art/provenance
 approval and optional wall-clock memory profiling. Phase 10 automated QA and Phase 11 local packaging now pass.
 
 | Phase | Status | Evidence |
@@ -17,6 +17,7 @@ approval and optional wall-clock memory profiling. Phase 10 automated QA and Pha
 | 09 Campaign | IN PROGRESS | Versioned save, unlock-on-win wiring, sandbox, bestiary and settings routes pass unit/browser checks; full campaign replay proof remains. |
 | 10 QA | PASS WITH PROFILE LIMITATION | Verify, full browser suite, audit, CSP/container smoke and 10-minute simulated cap profile pass; wall-clock memory trend remains unmeasured. |
 | 11 Release | PASS (LOCAL) | Non-root Nginx container, `/healthz`, deep-route fallback, immutable asset cache and security headers pass locally. |
+| 12 Strategic combat extension | PASS (SLICE) | Multi-phase scheduler, deterministic defender reroll, shield/fire/witch roles, wall-jumper/ice-guard enemies and browser HUD coverage pass; full long-term balance/playtest remains open. |
 
 ## Append for each execution
 - Date, phase, status (IN PROGRESS / PASS / BLOCKED), scope and changes.
@@ -205,3 +206,24 @@ approval and optional wall-clock memory profiling. Phase 10 automated QA and Pha
 - Not claimed: final owner visual/provenance approval or a ten-wall-clock-minute browser memory trend. Those are
   explicit human/optional follow-up gates, not converted into false green evidence.
 - Next exact task: review the QA report and land this hardening branch through a green PR into `main`.
+
+## 2026-11-28 — Strategic combat evolution — PASS (SLICE)
+
+- Inputs: owner request for multiple in-match enemy phases, roster rolling, original defender abilities and
+  later-map enemy abilities; existing `.codex/01`–`.codex/11`, `.codex/18`–`.codex/35`, source and reference
+  visuals were reconciled before editing.
+- Changes: added typed `WavePhase` scheduling with clear/intermission gating; authored 2–3 phases across
+  L1–L6; added deterministic `Đổi đội hình` energy roll; added Én khiên guard charge, Én lửa burn,
+  Én phù thủy hex, Kẻ nhảy tường lane jump and Vệ binh băng shield/freeze resistance. Added original local
+  SVG fallback art, Phaser projectile/status markers, bestiary entries and browser HUD coverage.
+- Evidence: `npm run verify` exit 0; 12 Vitest files / 40 tests passed; asset check reports 27 base entries
+  and 7 pack manifests; production build exit 0; targeted phase E2E 7/7 passed; full Playwright suite 12/12
+  passed against the branch server on port 4174. `artifacts/visual-qa/strategic/defender-roll-1440x900.png`
+  was captured and inspected for the new roster. Build retains the known non-blocking Phaser chunk warning.
+- Acceptance: phase 1 cannot open phase 2 until its enemies/projectiles clear; final victory remains gated by
+  the final phase; reroll charges once; shield blocks a breach; fire/witch statuses and both enemy abilities
+  are simulation-owned and deterministic.
+- Not claimed: final balance/playtest approval, full six-level reproducible strategy scripts, owner visual
+  sign-off or a wall-clock memory trend. The new SVGs are local runtime fallbacks and remain subject to the
+  existing visual/provenance gate.
+- Next exact task: inspect the staged diff, run the branch pre-push checks, then open a green PR into `main`.

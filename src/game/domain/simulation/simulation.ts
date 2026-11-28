@@ -27,6 +27,7 @@ import type {
   UnitKind,
   UnitState,
   SkillKind,
+  WavePhase,
   WaveSpawn,
   FormulaOwnership,
 } from './types';
@@ -44,6 +45,7 @@ const DEFAULT_ECONOMY: EconomyRules = {
   energyPickupValue: 25,
   relocationCost: 20,
   relocationCooldownTicks: 3 * 60,
+  rerollCost: 25,
 };
 const SKILL_STOCK_CAP = 3;
 const SLOW_DURATION_TICKS = 8 * 60;
@@ -66,6 +68,9 @@ export interface SimulationConfig {
   readonly economy?: Partial<EconomyRules>;
   readonly startingSkills?: Partial<Record<SkillKind, number>>;
   readonly waves?: readonly WaveSpawn[];
+  readonly phases?: readonly WavePhase[];
+  readonly shopOffers?: readonly UnitKind[];
+  readonly shopPool?: readonly UnitKind[];
   readonly quotaActive?: boolean;
   readonly previewAllowed?: boolean;
 }
@@ -118,7 +123,19 @@ function formulaOwnersFor(units: readonly UnitState[]): readonly FormulaOwnershi
   );
 }
 
-function createEnemy(kind: EnemyKind, id: string, position: Vec2, lane: number): EnemyState {
+function enemyAbility(kind: EnemyKind): EnemyState['ability'] {
+  if (kind === 'wallJumper') return 'wallJump';
+  if (kind === 'iceGuard') return 'iceShield';
+  return 'none';
+}
+
+function createEnemy(
+  kind: EnemyKind,
+  id: string,
+  position: Vec2,
+  lane: number,
+  phaseIndex: number,
+): EnemyState {
   const balance = enemyBalance[kind];
   return {
     id,
@@ -134,9 +151,55 @@ function createEnemy(kind: EnemyKind, id: string, position: Vec2, lane: number):
     maxShield: balance.shield,
     facingX: -1,
     freezeResistance: balance.freezeResistance,
+    ability: enemyAbility(kind),
+    phaseIndex,
+    jumpUntilTick: 0,
+    jumpUsed: false,
+    status: {
+      burnUntil: 0,
+      burnDamage: 0,
+      nextBurnTick: 0,
+      chillUntil: 0,
+      hexUntil: 0,
+    },
     radius: balance.radius,
     speed: balance.speed,
   };
+}
+
+const DEFAULT_SHOP_POOL: readonly UnitKind[] = [
+  'snow',
+  'frost',
+  'heavy',
+  'shield',
+  'fire',
+  'witch',
+  'nest',
+];
+
+function normalizeShopOffers(
+  offers: readonly UnitKind[] | undefined,
+  pool: readonly UnitKind[] | undefined,
+): readonly UnitKind[] {
+  const source = offers ?? ['snow', 'frost', 'heavy', 'nest'];
+  const allowed = pool ?? DEFAULT_SHOP_POOL;
+  const filtered = source.filter(
+    (kind, index) => allowed.includes(kind) && source.indexOf(kind) === index,
+  );
+  return filtered.length > 0 ? filtered : ['snow', 'frost', 'heavy'];
+}
+
+function phasePlanFromConfig(config: SimulationConfig): readonly WavePhase[] {
+  if (config.phases !== undefined && config.phases.length > 0) return config.phases;
+  return [
+    {
+      id: 'phase-1',
+      title: 'Làn mở màn',
+      intro: 'Những bước chân đầu tiên đang tiến vào vườn.',
+      spawns: config.waves ?? [],
+      intermissionTicks: 0,
+    },
+  ];
 }
 
 export function createSimulation(config: SimulationConfig): SimulationState {
@@ -160,6 +223,7 @@ export function createSimulation(config: SimulationConfig): SimulationState {
       attackState: startingUnit.kind === 'nest' ? 'DISABLED' : 'UNCONFIGURED',
       assignedFormula: null,
       relocationAvailableTick: 0,
+      guardAvailableTick: 0,
       production:
         startingUnit.kind === 'nest'
           ? {
@@ -171,6 +235,9 @@ export function createSimulation(config: SimulationConfig): SimulationState {
     next += 1;
     return unit;
   });
+  const phasePlan = phasePlanFromConfig(config);
+  const shopPool = config.shopPool ?? DEFAULT_SHOP_POOL;
+  const shopOffers = normalizeShopOffers(config.shopOffers, shopPool);
   return {
     tick: 0,
     mode: 'ready',
@@ -189,8 +256,16 @@ export function createSimulation(config: SimulationConfig): SimulationState {
       timeSkillCooldownUntil: 0,
       doubleDamageArmed: false,
     },
-    wavePlan: config.waves ?? [],
+    wavePlan: phasePlan.flatMap((phase) => phase.spawns),
+    phasePlan,
     nextWaveSpawnIndex: 0,
+    activePhaseIndex: 0,
+    phaseStatus: config.allWavesSpawned ? 'complete' : 'active',
+    phaseStartedTick: 0,
+    phaseIntermissionUntil: 0,
+    shopPool,
+    shopOffers,
+    shopRoll: 0,
     bossPhase: 0,
     quotaActive: config.quotaActive ?? false,
     formulaUseLimit: config.formulaUseLimit ?? Number.POSITIVE_INFINITY,
@@ -207,28 +282,78 @@ export function createSimulation(config: SimulationConfig): SimulationState {
 function advanceWaves(
   state: SimulationState,
 ): Readonly<{ state: SimulationState; events: readonly SimulationEvent[] }> {
+  if (
+    state.phasePlan.length === 0 ||
+    (state.wavePlan.length === 0 && !state.allWavesSpawned) ||
+    state.phaseStatus === 'complete'
+  ) {
+    return { state, events: [] };
+  }
   let nextIndex = state.nextWaveSpawnIndex;
   let nextIdValue = state.nextId;
   let enemies = state.enemies;
+  let activePhaseIndex = state.activePhaseIndex;
+  let phaseStatus = state.phaseStatus;
+  let phaseStartedTick = state.phaseStartedTick;
+  let phaseIntermissionUntil = state.phaseIntermissionUntil;
   const events: SimulationEvent[] = [];
-  while (nextIndex < state.wavePlan.length) {
-    const spawn = state.wavePlan[nextIndex];
-    if (spawn === undefined || spawn.tick > state.tick || enemies.length >= MAX_ENEMIES) break;
-    const position = { x: spawn.x, y: spawn.lane + 0.5 };
-    const enemy = createEnemy(spawn.kind, createId('enemy', nextIdValue), position, spawn.lane);
-    nextIdValue += 1;
-    enemies = [...enemies, enemy];
-    nextIndex += 1;
-    events.push({ type: 'enemySpawned', enemyId: enemy.id });
+  if (phaseStatus === 'intermission' && state.tick >= phaseIntermissionUntil) {
+    activePhaseIndex += 1;
+    phaseStatus = 'active';
+    phaseStartedTick = state.tick;
+    phaseIntermissionUntil = 0;
+    const phase = state.phasePlan[activePhaseIndex];
+    if (phase !== undefined) {
+      events.push({
+        type: 'phaseStarted',
+        phaseIndex: activePhaseIndex,
+        title: phase.title,
+        total: state.phasePlan.length,
+      });
+    }
   }
+  const phase = state.phasePlan[activePhaseIndex];
+  let phaseSpawnIndex =
+    nextIndex -
+    state.phasePlan
+      .slice(0, activePhaseIndex)
+      .reduce((total, current) => total + current.spawns.length, 0);
+  if (phase !== undefined && phaseStatus === 'active') {
+    const elapsed = state.tick - phaseStartedTick;
+    while (phaseSpawnIndex < phase.spawns.length && enemies.length < MAX_ENEMIES) {
+      const spawn = phase.spawns[phaseSpawnIndex];
+      if (spawn === undefined || spawn.tick > elapsed) break;
+      const position = { x: spawn.x, y: spawn.lane + 0.5 };
+      const enemy = createEnemy(
+        spawn.kind,
+        createId('enemy', nextIdValue),
+        position,
+        spawn.lane,
+        activePhaseIndex,
+      );
+      nextIdValue += 1;
+      enemies = [...enemies, enemy];
+      phaseSpawnIndex += 1;
+      nextIndex += 1;
+      events.push({ type: 'enemySpawned', enemyId: enemy.id });
+    }
+    if (phaseSpawnIndex >= phase.spawns.length) {
+      phaseStatus = 'clearing';
+    }
+  }
+  const finalPhaseSpawned =
+    activePhaseIndex >= state.phasePlan.length - 1 && phaseStatus === 'clearing';
   return {
     state: {
       ...state,
       enemies,
       nextId: nextIdValue,
       nextWaveSpawnIndex: nextIndex,
-      allWavesSpawned:
-        state.allWavesSpawned || (state.wavePlan.length > 0 && nextIndex >= state.wavePlan.length),
+      activePhaseIndex,
+      phaseStatus,
+      phaseStartedTick,
+      phaseIntermissionUntil,
+      allWavesSpawned: state.allWavesSpawned || finalPhaseSpawned,
     },
     events,
   };
@@ -236,6 +361,32 @@ function advanceWaves(
 
 function rejection(reason: CommandRejection): SimulationEvent {
   return { type: 'commandRejected', reason };
+}
+
+function applyRerollShop(
+  state: SimulationState,
+): Readonly<{ state: SimulationState; event: SimulationEvent }> {
+  if (state.mode !== 'ready' && state.mode !== 'running') {
+    return { state, event: rejection('INVALID_MODE') };
+  }
+  if (state.energy < state.economy.rerollCost) {
+    return { state, event: rejection('INSUFFICIENT_ENERGY') };
+  }
+  const nextRoll = state.shopRoll + 1;
+  const pool = state.shopPool.length > 0 ? state.shopPool : DEFAULT_SHOP_POOL;
+  const offers = Array.from(
+    { length: Math.min(4, pool.length) },
+    (_, index) => pool[(nextRoll * 2 + index) % pool.length],
+  ).filter((kind): kind is UnitKind => kind !== undefined);
+  return {
+    state: {
+      ...state,
+      energy: state.energy - state.economy.rerollCost,
+      shopOffers: offers,
+      shopRoll: nextRoll,
+    },
+    event: { type: 'shopRerolled', offers },
+  };
 }
 
 function unitAtCell(state: SimulationState, cell: Cell): UnitState | undefined {
@@ -268,6 +419,7 @@ function applyPlaceUnit(
     attackState: command.kind === 'nest' ? 'DISABLED' : 'UNCONFIGURED',
     assignedFormula: null,
     relocationAvailableTick: state.tick,
+    guardAvailableTick: state.tick,
     production:
       command.kind === 'nest'
         ? {
@@ -478,6 +630,7 @@ function emitShot(
     path: localPath.points,
     horizontalSpeed: balance.horizontalSpeed,
     damage,
+    effect: balance.projectileEffect,
     radius: balance.radius,
     maxHits: balance.maxHits,
     progressX: 0,
@@ -524,7 +677,13 @@ function applySpawnEnemy(
   if (state.enemies.length >= MAX_ENEMIES) return { state, event: rejection('NO_ENEMY_CAPACITY') };
   const generated = nextId(state);
   const position = { x: command.x, y: command.lane + 0.5 };
-  const enemy = createEnemy(command.kind, generated.id, position, command.lane);
+  const enemy = createEnemy(
+    command.kind,
+    generated.id,
+    position,
+    command.lane,
+    state.activePhaseIndex,
+  );
   return {
     state: { ...state, enemies: [...state.enemies, enemy], nextId: generated.next },
     event: { type: 'enemySpawned', enemyId: enemy.id },
@@ -790,6 +949,10 @@ function applyCommand(
       const result = applyFire(state, command, formulaUseLimit);
       return { state: result.state, events: result.events };
     }
+    case 'rerollShop': {
+      const result = applyRerollShop(state);
+      return { state: result.state, events: [result.event] };
+    }
     case 'spawnEnemy': {
       const result = applySpawnEnemy(state, command);
       return { state: result.state, events: [result.event] };
@@ -953,8 +1116,9 @@ function resolveProjectileDamage(
   enemy: EnemyState,
   projectile: ProjectileState,
   contactProgress: number,
+  tick: number,
 ): Readonly<{ enemy: EnemyState; healthDamage: number; absorbed: number; blocked: boolean }> {
-  let remaining = projectile.damage;
+  let remaining = enemy.status.hexUntil > tick ? projectile.damage * 1.35 : projectile.damage;
   const originalDamage = remaining;
   if (enemy.kind === 'boar') {
     const direction = projectileTravelDirection(projectile, contactProgress);
@@ -967,17 +1131,140 @@ function resolveProjectileDamage(
   const armorDamage = Math.min(enemy.armor, remaining);
   remaining -= armorDamage;
   const healthDamage = Math.min(enemy.health, remaining);
+  const status =
+    projectile.effect === 'burn'
+      ? {
+          ...enemy.status,
+          burnUntil: Math.max(enemy.status.burnUntil, tick + 3 * 60),
+          burnDamage: Math.max(enemy.status.burnDamage, 6),
+          nextBurnTick: Math.max(enemy.status.nextBurnTick, tick + 30),
+        }
+      : projectile.effect === 'hex'
+        ? { ...enemy.status, hexUntil: Math.max(enemy.status.hexUntil, tick + 4 * 60) }
+        : projectile.effect === 'chill'
+          ? { ...enemy.status, chillUntil: Math.max(enemy.status.chillUntil, tick + 3 * 60) }
+          : enemy.status;
   const nextEnemy = {
     ...enemy,
     shield: enemy.shield - shieldDamage,
     armor: enemy.armor - armorDamage,
     health: enemy.health - healthDamage,
+    status,
   };
   return {
     enemy: nextEnemy,
     healthDamage,
     absorbed: originalDamage - healthDamage,
     blocked: originalDamage > healthDamage,
+  };
+}
+
+function advanceEnemies(state: SimulationState): Readonly<{
+  enemies: readonly EnemyState[];
+  events: readonly SimulationEvent[];
+  defeatedIds: readonly string[];
+}> {
+  const events: SimulationEvent[] = [];
+  const defeatedIds: string[] = [];
+  const enemies = state.enemies.map((enemy) => {
+    let nextEnemy = enemy;
+    if (
+      enemy.status.burnUntil > state.tick &&
+      state.tick >= enemy.status.nextBurnTick &&
+      enemy.health > 0
+    ) {
+      const damage = Math.min(enemy.status.burnDamage, enemy.health);
+      nextEnemy = {
+        ...nextEnemy,
+        health: enemy.health - damage,
+        status: { ...enemy.status, nextBurnTick: state.tick + 30 },
+      };
+      events.push({ type: 'enemyBurned', enemyId: enemy.id, damage });
+      if (nextEnemy.health <= 0) {
+        defeatedIds.push(enemy.id);
+        events.push({ type: 'enemyDefeated', enemyId: enemy.id });
+      }
+    }
+    const obstacle =
+      nextEnemy.ability === 'wallJump' && !nextEnemy.jumpUsed
+        ? state.board.obstacles.find(
+            (candidate) =>
+              nextEnemy.position.x <= candidate.maxX + 0.18 &&
+              nextEnemy.position.x >= candidate.minX - 0.18 &&
+              nextEnemy.position.y >= candidate.minY - 0.5 &&
+              nextEnemy.position.y <= candidate.maxY + 0.5,
+          )
+        : undefined;
+    const jumpLane =
+      obstacle === undefined
+        ? nextEnemy.lane
+        : nextEnemy.lane + 1 < state.board.rows
+          ? nextEnemy.lane + 1
+          : nextEnemy.lane - 1;
+    if (obstacle !== undefined && nextEnemy.health > 0) {
+      nextEnemy = {
+        ...nextEnemy,
+        lane: jumpLane,
+        jumpUntilTick: state.tick + 30,
+        jumpUsed: true,
+      };
+      events.push({ type: 'enemyWallJumped', enemyId: enemy.id, lane: jumpLane });
+    }
+    const enemyTimeFactor =
+      state.tick < state.effects.freezeUntil
+        ? nextEnemy.freezeResistance
+        : state.tick < state.effects.slowUntil
+          ? 0.4
+          : 1;
+    const localFactor = nextEnemy.status.chillUntil > state.tick ? 0.6 : 1;
+    const laneShift =
+      nextEnemy.kind === 'raven'
+        ? Math.sin((state.tick + nextEnemy.id.length * 17) / 38) * 0.42
+        : 0;
+    const jumpOffset = nextEnemy.jumpUntilTick > state.tick ? 0.62 : 0;
+    return {
+      ...nextEnemy,
+      previousPosition: nextEnemy.position,
+      position: {
+        x: Math.max(
+          0,
+          nextEnemy.position.x - nextEnemy.speed * FIXED_DT * enemyTimeFactor * localFactor,
+        ),
+        y: nextEnemy.lane + 0.5 + laneShift + jumpOffset,
+      },
+    };
+  });
+  return { enemies, events, defeatedIds };
+}
+
+function advancePhaseLifecycle(
+  state: SimulationState,
+  enemies: readonly EnemyState[],
+  projectiles: readonly ProjectileState[],
+): Readonly<{ state: SimulationState; events: readonly SimulationEvent[] }> {
+  if (state.phaseStatus !== 'clearing') return { state, events: [] };
+  if (
+    enemies.some((enemy) => enemy.phaseIndex === state.activePhaseIndex) ||
+    projectiles.length > 0
+  ) {
+    return { state, events: [] };
+  }
+  const phase = state.phasePlan[state.activePhaseIndex];
+  if (phase === undefined) return { state, events: [] };
+  const nextPhaseExists = state.activePhaseIndex + 1 < state.phasePlan.length;
+  if (!nextPhaseExists) {
+    return {
+      state: { ...state, allWavesSpawned: true, phaseStatus: 'complete' },
+      events: [{ type: 'phaseCleared', phaseIndex: state.activePhaseIndex }],
+    };
+  }
+  return {
+    state: {
+      ...state,
+      phaseStatus: 'intermission',
+      phaseIntermissionUntil: state.tick + phase.intermissionTicks,
+    },
+    events: [{ type: 'phaseCleared', phaseIndex: state.activePhaseIndex }],
   };
 }
 
@@ -989,28 +1276,16 @@ function advanceState(
   const produced = advanceProduction(scheduled.state);
   const automatic = scheduleAutomaticAttacks(produced.state);
   const baseState = automatic.state;
-  const enemies = baseState.enemies.map((enemy) => {
-    const enemyTimeFactor =
-      baseState.tick < baseState.effects.freezeUntil
-        ? enemy.freezeResistance
-        : baseState.tick < baseState.effects.slowUntil
-          ? 0.4
-          : 1;
-    const laneShift =
-      enemy.kind === 'raven' ? Math.sin((baseState.tick + enemy.id.length * 17) / 38) * 0.42 : 0;
-    return {
-      ...enemy,
-      previousPosition: enemy.position,
-      position: {
-        x: Math.max(0, enemy.position.x - enemy.speed * FIXED_DT * enemyTimeFactor),
-        y: enemy.lane + 0.5 + laneShift,
-      },
-    };
-  });
-  const events: SimulationEvent[] = [...scheduled.events, ...produced.events, ...automatic.events];
-  const defeated = new Set<string>();
+  const advancedEnemies = advanceEnemies(baseState);
+  const events: SimulationEvent[] = [
+    ...scheduled.events,
+    ...produced.events,
+    ...automatic.events,
+    ...advancedEnemies.events,
+  ];
+  const defeated = new Set(advancedEnemies.defeatedIds);
   const projectiles: ProjectileState[] = [];
-  let currentEnemies = enemies;
+  let currentEnemies = advancedEnemies.enemies;
   let currentBoard = baseState.board;
   let bossPhase: 0 | 1 | 2 = baseState.bossPhase;
   let quotaActive = baseState.quotaActive;
@@ -1039,12 +1314,17 @@ function advanceState(
       }
       if (hitCount >= projectile.maxHits || hitIds.includes(contact.id)) continue;
       const enemy = currentEnemies.find((current) => current.id === contact.id);
-      if (enemy === undefined) continue;
+      if (enemy === undefined || enemy.health <= 0) continue;
       hitIds.push(enemy.id);
       hitCount += 1;
       const contactProgress =
         projectile.progressX + (nextProgressX - projectile.progressX) * contact.time;
-      const damageResult = resolveProjectileDamage(enemy, projectile, contactProgress);
+      const damageResult = resolveProjectileDamage(
+        enemy,
+        projectile,
+        contactProgress,
+        baseState.tick,
+      );
       const nextHealth = damageResult.enemy.health;
       currentEnemies = currentEnemies.map((current) =>
         current.id === enemy.id ? damageResult.enemy : current,
@@ -1085,7 +1365,13 @@ function advanceState(
           for (const lane of [1, 3]) {
             if (currentEnemies.length >= MAX_ENEMIES) break;
             const position = { x: Math.min(state.board.columns - 0.5, 8.5), y: lane + 0.5 };
-            const add = createEnemy('fox', createId('enemy', nextIdValue), position, lane);
+            const add = createEnemy(
+              'fox',
+              createId('enemy', nextIdValue),
+              position,
+              lane,
+              baseState.activePhaseIndex,
+            );
             nextIdValue += 1;
             currentEnemies = [...currentEnemies, add];
             events.push({ type: 'enemySpawned', enemyId: add.id });
@@ -1108,21 +1394,51 @@ function advanceState(
   }
   currentEnemies = currentEnemies.filter((enemy) => !defeated.has(enemy.id));
   let hearts = baseState.hearts;
+  let units = baseState.units;
   currentEnemies = currentEnemies.filter((enemy) => {
     if (enemy.position.x > 0) return true;
+    const guard = units.find(
+      (unit) =>
+        unit.kind === 'shield' &&
+        unit.cell.row === enemy.lane &&
+        unit.guardAvailableTick <= baseState.tick,
+    );
+    if (guard !== undefined) {
+      units = units.map((unit) =>
+        unit.id === guard.id
+          ? {
+              ...unit,
+              guardAvailableTick: baseState.tick + unitBalance.shield.guardCooldownTicks,
+            }
+          : unit,
+      );
+      events.push({ type: 'enemyBlockedByShield', enemyId: enemy.id, unitId: guard.id });
+      return false;
+    }
     hearts = Math.max(0, hearts - 1);
     events.push({ type: 'enemyBreached', enemyId: enemy.id, heartsRemaining: hearts });
     return false;
   });
+  const phaseLifecycle = advancePhaseLifecycle(
+    {
+      ...baseState,
+      enemies: currentEnemies,
+      projectiles,
+    },
+    currentEnemies,
+    projectiles,
+  );
+  events.push(...phaseLifecycle.events);
+  const phaseState = phaseLifecycle.state;
   const won =
-    baseState.allWavesSpawned &&
+    phaseState.allWavesSpawned &&
     currentEnemies.length === 0 &&
     projectiles.length === 0 &&
     baseState.tick > 0;
   const lost = hearts <= 0;
   const mode = lost ? 'lost' : won ? 'won' : 'running';
   if (mode === 'won' || mode === 'lost') events.push({ type: 'matchEnded', result: mode });
-  const units = baseState.units.map((unit) => ({
+  units = units.map((unit) => ({
     ...unit,
     attackState:
       unit.attackState === 'FORMULA_LOCKED'
@@ -1132,6 +1448,7 @@ function advanceState(
   return {
     state: {
       ...baseState,
+      ...phaseState,
       tick: baseState.tick + 1,
       board: currentBoard,
       bossPhase,

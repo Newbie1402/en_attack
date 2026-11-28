@@ -29,6 +29,21 @@ test('skills become usable only while a match is running', async ({ page }) => {
   await expect(slow).toBeDisabled();
 });
 
+test('shows multi-phase defense and rolls a new defender squad', async ({ page }) => {
+  await page.goto('/play/L4');
+  await expect(page.getByRole('heading', { name: 'Đường mòn băng giá' })).toBeVisible();
+  await expect(page.locator('.wave-meter')).toContainText('Dấu chân lạnh');
+  const roll = page.getByRole('button', { name: /Đổi đội hình/ });
+  await expect(roll).toBeEnabled();
+  await roll.click();
+  await expect(page.getByLabel('Năng lượng hiện có')).toContainText('325');
+  await expect(page.getByRole('button', { name: /Én lửa/ })).toBeVisible();
+  await page.screenshot({
+    path: 'artifacts/visual-qa/strategic/defender-roll-1440x900.png',
+    fullPage: false,
+  });
+});
+
 test('Escape cancels board modes and toggles the authoritative pause state', async ({ page }) => {
   await page.goto('/play/L1');
   await page.getByRole('button', { name: /Én tuyết/ }).click();
