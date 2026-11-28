@@ -88,3 +88,23 @@ are not claimed. Reference PNGs were inspected visually and remain outside runti
   release-candidate status. Npm audit still reports high findings and the Phaser bundle warning remains.
 - Next exact task: finish Phase 04–07 interaction details and reproducible authored-level scripts before
   attempting Phase 08/10 gates.
+
+## 2026-11-28 — Visual overhaul first slice — IN PROGRESS
+
+- Inputs: visual overhaul brief, existing Phase 00–09 implementation, `.codex/01`–`.codex/11`, three
+  reference PNGs and the new `.codex/12`–`.codex/17` design/QA records.
+- Scope: dedicated gameplay viewport, Vietnamese game HUD, local seasonal SVG art, event-driven combat
+  feedback, visible nest pickup collection, formula shortcuts and player-facing lifecycle controls.
+- Changes: `src/gameplay.css`, `BattlefieldPage`, `PhaserBattlefieldCanvas`, local `public/assets`, browser
+  visual/pickup specs and before/after QA captures. Simulation contracts remain the single source of truth.
+- Decisions: D20–D22 in `.codex/09-DECISIONS.md` record fixed viewport composition, local Phaser art and
+  pickup-first pointer priority.
+- Evidence: `npm run verify` exit 0 (lint, format check, strict typecheck, 26 Vitest tests and build);
+  `npm run test:e2e` exit 0 (9 Chromium tests). Visual captures were inspected at 1920×1080, 1440×900,
+  1366×768 and 1280×720, plus winter and real nest-pickup flows. The pickup flow observed energy 150 →
+  175 only after clicking the visible pickup.
+- Not claimed: final commissioned atlases/audio, full animation state coverage, detailed reward metrics,
+  measured performance profile, CSP/security audit or release packaging. See `.codex/17-POLISH-PROGRESS.md`
+  for the V01–V11 visual gate status.
+- Next exact task: complete the remaining V04–V09 lifecycle/animation states, then execute V10 menu/audio
+  and V11 performance/security gates.
