@@ -1,16 +1,19 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type PointerEvent } from 'react';
 import Phaser from 'phaser';
 
 import {
   cellCenter,
   createScreenLayout,
+  isDeployable,
   screenToWorld,
   worldToScreen,
 } from '../../game/domain/board/board';
+import type { Cell } from '../../game/domain/board/board';
 import type {
   EnemyState,
   SimulationEvent,
   SimulationState,
+  UnitKind,
   UnitState,
 } from '../../game/domain/simulation/types';
 import type { GameSession } from '../../game/application/session';
@@ -29,6 +32,14 @@ interface BattlefieldSceneData {
   readonly session: GameSession;
   readonly previewStore: PreviewStore;
   readonly theme: 'spring' | 'winter';
+  readonly interactionStore: InteractionStore;
+}
+
+interface InteractionStore {
+  placementKind: UnitKind | null;
+  relocationUnitId: string | null;
+  onBoardCell: (cell: Cell) => void;
+  cancel: () => void;
 }
 
 class BattlefieldScene extends Phaser.Scene {
@@ -45,6 +56,12 @@ class BattlefieldScene extends Phaser.Scene {
   private previewStore: PreviewStore | null = null;
 
   private theme: 'spring' | 'winter' = 'spring';
+
+  private interactionStore: InteractionStore | null = null;
+
+  private hoverCell: Cell | null = null;
+
+  private placementGhost: Phaser.GameObjects.Image | null = null;
 
   private readonly unitSprites = new Map<string, Phaser.GameObjects.Image>();
 
@@ -66,6 +83,7 @@ class BattlefieldScene extends Phaser.Scene {
     this.session = data.session;
     this.previewStore = data.previewStore;
     this.theme = data.theme;
+    this.interactionStore = data.interactionStore;
     this.state = data.session.getState();
   }
 
@@ -90,12 +108,24 @@ class BattlefieldScene extends Phaser.Scene {
       width: 144,
       height: 128,
     });
+    this.load.svg('enemy-rabbit', '/assets/characters/enemies/rabbit/rabbit.svg', {
+      width: 144,
+      height: 128,
+    });
     this.load.svg('enemy-boar', '/assets/characters/enemies/boar/boar.svg', {
+      width: 176,
+      height: 144,
+    });
+    this.load.svg('enemy-turtle', '/assets/characters/enemies/turtle/turtle.svg', {
       width: 176,
       height: 144,
     });
     this.load.svg('enemy-raven', '/assets/characters/enemies/raven/raven.svg', {
       width: 160,
+      height: 144,
+    });
+    this.load.svg('enemy-wolf', '/assets/characters/enemies/wolf/wolf.svg', {
+      width: 176,
       height: 144,
     });
     this.load.svg('enemy-guardian', '/assets/characters/enemies/boss/guardian.svg', {
@@ -137,6 +167,7 @@ class BattlefieldScene extends Phaser.Scene {
       this.handleSimulationEvents(events);
     });
     this.input.on('pointerdown', this.handlePointerDown, this);
+    this.input.on('pointermove', this.handlePointerMove, this);
     this.scale.on(Phaser.Scale.Events.RESIZE, this.renderScene, this);
     this.renderScene();
   }
@@ -149,6 +180,7 @@ class BattlefieldScene extends Phaser.Scene {
     this.unsubscribe?.();
     this.unsubscribe = null;
     this.input.off('pointerdown', this.handlePointerDown, this);
+    this.input.off('pointermove', this.handlePointerMove, this);
     this.scale.off(Phaser.Scale.Events.RESIZE, this.renderScene, this);
     this.destroySprites(this.unitSprites);
     this.destroySprites(this.enemySprites);
@@ -157,23 +189,39 @@ class BattlefieldScene extends Phaser.Scene {
     this.destroySprites(this.collectingPickups);
     this.environmentSprite?.destroy();
     this.environmentSprite = null;
+    this.placementGhost?.destroy();
+    this.placementGhost = null;
+  }
+
+  private handlePointerMove(pointer: Phaser.Input.Pointer): void {
+    const state = this.state;
+    if (state === null || this.interactionStore === null) return;
+    const layout = this.createLayout();
+    const world = screenToWorld({ x: pointer.x, y: pointer.y }, state.board, layout);
+    this.hoverCell = {
+      col: Math.floor(world.x),
+      row: Math.floor(world.y),
+    };
   }
 
   private handlePointerDown(pointer: Phaser.Input.Pointer): void {
     const state = this.state;
     const session = this.session;
     if (state === null || session === null) return;
-    const baseLayout = createScreenLayout(
-      state.board,
-      this.scale.width - 40,
-      this.scale.height - 86,
-    );
-    const layout = {
-      ...baseLayout,
-      boardLeft: baseLayout.boardLeft + 20,
-      boardTop: baseLayout.boardTop + 58,
-    };
+    const layout = this.createLayout();
     const world = screenToWorld({ x: pointer.x, y: pointer.y }, state.board, layout);
+    const interaction = this.interactionStore;
+    if (pointer.rightButtonDown() && interaction !== null) {
+      interaction.cancel();
+      return;
+    }
+    if (
+      interaction !== null &&
+      (interaction.placementKind !== null || interaction.relocationUnitId !== null)
+    ) {
+      interaction.onBoardCell({ col: Math.floor(world.x), row: Math.floor(world.y) });
+      return;
+    }
     const pickup = state.pickups.find(
       (current) => Math.hypot(current.position.x - world.x, current.position.y - world.y) <= 0.42,
     );
@@ -191,18 +239,27 @@ class BattlefieldScene extends Phaser.Scene {
     }
   }
 
+  private createLayout(): ReturnType<typeof createScreenLayout> {
+    const state = this.state;
+    const baseLayout = createScreenLayout(
+      state?.board ?? { columns: 10, rows: 5, deploymentColumns: 3, obstacles: [] },
+      this.scale.width - 40,
+      this.scale.height - 86,
+    );
+    return {
+      ...baseLayout,
+      boardLeft: baseLayout.boardLeft + 20,
+      boardTop: baseLayout.boardTop + 58,
+    };
+  }
+
   private renderScene(): void {
     const state = this.state;
     const graphics = this.graphics;
     if (state === null || graphics === null) return;
     const width = this.scale.width;
     const height = this.scale.height;
-    const baseLayout = createScreenLayout(state.board, width - 40, height - 86);
-    const layout = {
-      ...baseLayout,
-      boardLeft: baseLayout.boardLeft + 20,
-      boardTop: baseLayout.boardTop + 58,
-    };
+    const layout = this.createLayout();
     this.environmentSprite?.setPosition(0, 0).setDisplaySize(width, height);
     graphics.clear();
 
@@ -217,25 +274,50 @@ class BattlefieldScene extends Phaser.Scene {
     this.drawEnvironment(graphics, state, layout);
     for (let row = 0; row < state.board.rows; row += 1) {
       for (let col = 0; col < state.board.columns; col += 1) {
+        const variation = (col * 17 + row * 29) % 3;
         const color =
           this.theme === 'winter'
-            ? (row + col) % 2 === 0
-              ? 0xcde1d8
-              : 0xbdd5cc
-            : (row + col) % 2 === 0
-              ? 0xb6d486
-              : 0xa9c977;
+            ? ([0xcfe4df, 0xc7ded8, 0xd6e9e0][variation] ?? 0xcfe4df)
+            : ([0xb9d487, 0xb2cf7d, 0xc0d991][variation] ?? 0xb9d487);
         graphics.fillStyle(color, 1);
-        graphics.fillRoundedRect(
-          layout.boardLeft + col * layout.cellPx + 2,
-          layout.boardTop + (state.board.rows - row - 1) * layout.cellPx + 2,
-          layout.cellPx - 4,
-          layout.cellPx - 4,
-          10,
+        const tileTop = layout.boardTop + (state.board.rows - row - 1) * layout.cellPx;
+        graphics.fillRect(
+          layout.boardLeft + col * layout.cellPx + 1,
+          tileTop + 1,
+          layout.cellPx - 2,
+          layout.cellPx - 2,
         );
+        if (this.theme === 'winter') {
+          graphics.fillStyle(0xffffff, 0.28);
+          graphics.fillCircle(
+            layout.boardLeft + col * layout.cellPx + layout.cellPx * (0.22 + variation * 0.18),
+            tileTop + layout.cellPx * 0.28,
+            layout.cellPx * 0.035,
+          );
+          graphics.fillCircle(
+            layout.boardLeft + col * layout.cellPx + layout.cellPx * 0.72,
+            tileTop + layout.cellPx * 0.7,
+            layout.cellPx * 0.025,
+          );
+        } else {
+          graphics.lineStyle(1.5, 0x6e9b5b, 0.24);
+          const tuftX =
+            layout.boardLeft + col * layout.cellPx + layout.cellPx * (0.22 + variation * 0.16);
+          const tuftY = tileTop + layout.cellPx * 0.76;
+          graphics.lineBetween(tuftX, tuftY, tuftX - 3, tuftY - layout.cellPx * 0.12);
+          graphics.lineBetween(tuftX, tuftY, tuftX + 4, tuftY - layout.cellPx * 0.16);
+          if ((col + row) % 4 === 0) {
+            graphics.fillStyle(0xf49a87, 0.72);
+            graphics.fillCircle(
+              layout.boardLeft + col * layout.cellPx + layout.cellPx * 0.72,
+              tileTop + layout.cellPx * 0.3,
+              layout.cellPx * 0.035,
+            );
+          }
+        }
       }
     }
-    graphics.lineStyle(2, this.theme === 'winter' ? 0xf2fbf5 : 0xe8f5d8, 0.48);
+    graphics.lineStyle(1, this.theme === 'winter' ? 0xf2fbf5 : 0xeff4d8, 0.22);
     for (let col = 0; col <= state.board.columns; col += 1) {
       graphics.lineBetween(
         layout.boardLeft + col * layout.cellPx,
@@ -269,6 +351,7 @@ class BattlefieldScene extends Phaser.Scene {
         layout.cellPx * 0.12,
       );
     }
+    this.drawPlacementOverlay(graphics, state, layout);
     this.syncUnitSprites(state, layout);
     this.syncEnemySprites(state, layout);
     this.syncPickupSprites(state, layout);
@@ -306,7 +389,7 @@ class BattlefieldScene extends Phaser.Scene {
       if (event.type === 'hit') {
         const sprite = this.enemySprites.get(event.enemyId);
         if (sprite !== undefined) {
-          sprite.setTint(0xffffff);
+          sprite.setTint(event.blocked ? 0xf5c96a : 0xffffff);
           this.time.delayedCall(100, () => sprite.clearTint());
           const state = this.state;
           const enemy = state?.enemies.find((current) => current.id === event.enemyId);
@@ -323,14 +406,19 @@ class BattlefieldScene extends Phaser.Scene {
             };
             const point = worldToScreen(enemy.position, state.board, layout);
             const label = this.add
-              .text(point.x, point.y - layout.cellPx * 0.55, `-${Math.round(event.damage)}`, {
-                color: '#fff8e8',
-                fontFamily: 'Trebuchet MS, sans-serif',
-                fontSize: `${Math.max(13, layout.cellPx * 0.18)}px`,
-                fontStyle: 'bold',
-                stroke: '#a94e3b',
-                strokeThickness: 4,
-              })
+              .text(
+                point.x,
+                point.y - layout.cellPx * 0.55,
+                event.blocked && event.damage === 0 ? 'CHẶN' : `-${Math.round(event.damage)}`,
+                {
+                  color: '#fff8e8',
+                  fontFamily: 'Trebuchet MS, sans-serif',
+                  fontSize: `${Math.max(13, layout.cellPx * 0.18)}px`,
+                  fontStyle: 'bold',
+                  stroke: '#a94e3b',
+                  strokeThickness: 4,
+                },
+              )
               .setOrigin(0.5)
               .setDepth(16);
             this.tweens.add({
@@ -416,6 +504,79 @@ class BattlefieldScene extends Phaser.Scene {
     }
   }
 
+  private drawPlacementOverlay(
+    graphics: Phaser.GameObjects.Graphics,
+    state: SimulationState,
+    layout: ReturnType<typeof createScreenLayout>,
+  ): void {
+    const interaction = this.interactionStore;
+    if (
+      interaction === null ||
+      (interaction.placementKind === null && interaction.relocationUnitId === null)
+    ) {
+      this.placementGhost?.setVisible(false);
+      return;
+    }
+    const movingUnit =
+      interaction.relocationUnitId === null
+        ? null
+        : (state.units.find((unit) => unit.id === interaction.relocationUnitId) ?? null);
+    const occupied = new Set(
+      state.units
+        .filter((unit) => unit.id !== movingUnit?.id)
+        .map((unit) => `${unit.cell.col}:${unit.cell.row}`),
+    );
+    for (let row = 0; row < state.board.rows; row += 1) {
+      for (let col = 0; col < state.board.columns; col += 1) {
+        const cell = { col, row };
+        const occupiedCell = occupied.has(`${col}:${row}`);
+        const blockedByObstacle = state.board.obstacles.some(
+          (obstacle) =>
+            col + 0.5 > obstacle.minX &&
+            col + 0.5 < obstacle.maxX &&
+            row + 0.5 > obstacle.minY &&
+            row + 0.5 < obstacle.maxY,
+        );
+        const valid = isDeployable(cell, state.board) && !occupiedCell && !blockedByObstacle;
+        const topLeft = worldToScreen({ x: col, y: row + 1 }, state.board, layout);
+        graphics.fillStyle(valid ? 0x7ccf94 : 0xd67c70, valid ? 0.18 : 0.08);
+        graphics.fillRect(topLeft.x + 4, topLeft.y + 4, layout.cellPx - 8, layout.cellPx - 8);
+      }
+    }
+    const hover = this.hoverCell;
+    if (hover === null || hover.col < 0 || hover.row < 0) return;
+    const hoverValid =
+      isDeployable(hover, state.board) && !occupied.has(`${hover.col}:${hover.row}`);
+    const hoverTopLeft = worldToScreen({ x: hover.col, y: hover.row + 1 }, state.board, layout);
+    graphics.lineStyle(3, hoverValid ? 0x54b77d : 0xd95c5c, 0.95);
+    graphics.strokeRect(
+      hoverTopLeft.x + 4,
+      hoverTopLeft.y + 4,
+      layout.cellPx - 8,
+      layout.cellPx - 8,
+    );
+    if (interaction.placementKind === null || !hoverValid) {
+      this.placementGhost?.setVisible(false);
+      return;
+    }
+    const key =
+      interaction.placementKind === 'nest'
+        ? 'nest-lucky'
+        : interaction.placementKind === 'snow'
+          ? 'swallow-normal'
+          : `swallow-${interaction.placementKind}`;
+    if (this.placementGhost === null) {
+      this.placementGhost = this.add.image(0, 0, key).setOrigin(0.5).setDepth(5);
+    }
+    if (this.placementGhost.texture.key !== key) this.placementGhost.setTexture(key);
+    const center = worldToScreen(cellCenter(hover), state.board, layout);
+    this.placementGhost
+      .setVisible(true)
+      .setPosition(center.x, center.y)
+      .setDisplaySize(layout.cellPx * 0.7, layout.cellPx * 0.56)
+      .setAlpha(0.58);
+  }
+
   private syncUnitSprites(
     state: SimulationState,
     layout: ReturnType<typeof createScreenLayout>,
@@ -441,7 +602,11 @@ class BattlefieldScene extends Phaser.Scene {
       const width = layout.cellPx * (unit.kind === 'heavy' ? 0.78 : 0.7);
       sprite.setPosition(center.x, center.y + bob);
       sprite.setDisplaySize(width, width * 0.8);
-      sprite.setAlpha(unit.cooldownUntil > state.tick ? 0.74 : 1);
+      sprite.setAlpha(
+        unit.attackState === 'COOLDOWN' ? 0.74 : unit.assignedFormula === null ? 0.84 : 1,
+      );
+      if (unit.attackState === 'FORMULA_LOCKED') sprite.setTint(0xff9c8a);
+      else sprite.clearTint();
       sprite.setRotation(
         unit.kind === 'nest' ? Math.sin(state.tick / 24) * 0.02 : Math.sin(state.tick / 14) * 0.025,
       );
@@ -539,6 +704,10 @@ class BattlefieldScene extends Phaser.Scene {
         layout.cellPx * 0.36,
         layout.cellPx * 0.1,
       );
+      if (unit.id === state.selectedUnitId) {
+        graphics.lineStyle(3, 0xf3b54b, 0.95);
+        graphics.strokeCircle(center.x, center.y, layout.cellPx * 0.4);
+      }
     }
     for (const enemy of state.enemies) {
       const center = worldToScreen(enemy.position, state.board, layout);
@@ -559,24 +728,33 @@ class BattlefieldScene extends Phaser.Scene {
     for (const enemy of state.enemies) {
       const center = worldToScreen(enemy.position, state.board, layout);
       const radius = layout.cellPx * (enemy.kind === 'guardian' ? 0.56 : enemy.radius * 1.18);
-      const maxHealth =
-        enemy.kind === 'boar'
-          ? 220
-          : enemy.kind === 'guardian'
-            ? 1000
-            : enemy.kind === 'raven'
-              ? 120
-              : 90;
       graphics.fillStyle(0x273449, 0.9);
       graphics.fillRoundedRect(center.x - radius, center.y - radius * 1.26, radius * 2, 6, 3);
       graphics.fillStyle(enemy.kind === 'guardian' ? 0xf1b84b : 0xe85b57, 1);
       graphics.fillRoundedRect(
         center.x - radius,
         center.y - radius * 1.26,
-        radius * 2 * Math.max(0, enemy.health / maxHealth),
+        radius * 2 * Math.max(0, enemy.health / enemy.maxHealth),
         6,
         3,
       );
+      if (enemy.maxArmor > 0) {
+        graphics.fillStyle(0x35485c, 0.9);
+        graphics.fillRoundedRect(center.x - radius, center.y - radius * 1.26 - 8, radius * 2, 4, 2);
+        graphics.fillStyle(0xd5b45e, 1);
+        graphics.fillRoundedRect(
+          center.x - radius,
+          center.y - radius * 1.26 - 8,
+          radius * 2 * Math.max(0, enemy.armor / enemy.maxArmor),
+          4,
+          2,
+        );
+      }
+      if (enemy.maxShield > 0) {
+        graphics.fillStyle(0x6cc4db, 0.95);
+        graphics.lineStyle(2, 0xb8eff7, 0.85);
+        graphics.strokeCircle(center.x, center.y, radius * 1.2);
+      }
     }
   }
 
@@ -790,19 +968,40 @@ interface PhaserBattlefieldCanvasProps {
   readonly session: GameSession;
   readonly preview: PreviewTrajectory | null;
   readonly theme: 'spring' | 'winter';
+  readonly placementKind: UnitKind | null;
+  readonly relocationUnitId: string | null;
+  readonly onBoardCell: (cell: Cell) => void;
+  readonly onCancel: () => void;
 }
 
 export function PhaserBattlefieldCanvas({
   session,
   preview,
   theme,
+  placementKind,
+  relocationUnitId,
+  onBoardCell,
+  onCancel,
 }: PhaserBattlefieldCanvasProps): React.JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null);
   const previewStore = useRef<PreviewStore>({ current: preview });
+  const interactionStore = useRef<InteractionStore>({
+    placementKind,
+    relocationUnitId,
+    onBoardCell,
+    cancel: onCancel,
+  });
 
   useEffect(() => {
     previewStore.current.current = preview;
   }, [preview]);
+
+  useEffect(() => {
+    interactionStore.current.placementKind = placementKind;
+    interactionStore.current.relocationUnitId = relocationUnitId;
+    interactionStore.current.onBoardCell = onBoardCell;
+    interactionStore.current.cancel = onCancel;
+  }, [onBoardCell, onCancel, placementKind, relocationUnitId]);
 
   useEffect(() => {
     const parent = containerRef.current;
@@ -820,7 +1019,12 @@ export function PhaserBattlefieldCanvas({
       },
       render: { antialias: true, roundPixels: true },
     });
-    game.scene.start('battlefield-scene', { session, previewStore: previewStore.current, theme });
+    game.scene.start('battlefield-scene', {
+      session,
+      previewStore: previewStore.current,
+      theme,
+      interactionStore: interactionStore.current,
+    });
     session.start();
     return () => {
       session.dispose();
@@ -828,5 +1032,46 @@ export function PhaserBattlefieldCanvas({
     };
   }, [session, theme]);
 
-  return <div className="phaser-mount" ref={containerRef} aria-label="Chiến trường SnowGraph" />;
+  const handlePlacementPointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    if (placementKind === null && relocationUnitId === null) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const state = session.getState();
+    const baseLayout = createScreenLayout(state.board, rect.width - 40, rect.height - 86);
+    const layout = {
+      ...baseLayout,
+      boardLeft: baseLayout.boardLeft + 20,
+      boardTop: baseLayout.boardTop + 58,
+    };
+    const world = screenToWorld(
+      { x: event.clientX - rect.left, y: event.clientY - rect.top },
+      state.board,
+      layout,
+    );
+    onBoardCell({ col: Math.floor(world.x), row: Math.floor(world.y) });
+    event.stopPropagation();
+  };
+
+  const handleInteractionCancel = (event: {
+    preventDefault: () => void;
+    stopPropagation: () => void;
+  }) => {
+    if (placementKind === null && relocationUnitId === null) return;
+    event.preventDefault();
+    onCancel();
+    event.stopPropagation();
+  };
+
+  return (
+    <div
+      className="phaser-mount"
+      ref={containerRef}
+      aria-label="Chiến trường SnowGraph"
+      onPointerDownCapture={handlePlacementPointerDown}
+      onContextMenuCapture={handleInteractionCancel}
+      onKeyDownCapture={(event) => {
+        if (event.key === 'Escape') handleInteractionCancel(event);
+      }}
+      tabIndex={0}
+    />
+  );
 }

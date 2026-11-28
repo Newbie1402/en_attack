@@ -13,6 +13,9 @@ They are loaded independently by Phaser from `/assets/...`; none is a screenshot
 | enemy-boar | `public/assets/characters/enemies/boar/boar.svg` | 176×144 / 1 | center | Boar enemy | complete |
 | enemy-raven | `public/assets/characters/enemies/raven/raven.svg` | 160×144 / 1 | center | Raven enemy | complete |
 | enemy-guardian | `public/assets/characters/enemies/boss/guardian.svg` | 224×192 / 1 | center | Guardian boss | complete |
+| enemy-rabbit | `public/assets/characters/enemies/rabbit/rabbit.svg` | 128×112 / 1 | center | Fast rabbit enemy | first-pass V3 |
+| enemy-turtle | `public/assets/characters/enemies/turtle/turtle.svg` | 176×144 / 1 | center | Armored turtle enemy | first-pass V3 |
+| enemy-wolf | `public/assets/characters/enemies/wolf/wolf.svg` | 160×128 / 1 | center | Freeze-resistant wolf enemy | first-pass V3 |
 | pickup-energy | `public/assets/pickups/energy.svg` | 80×80 / 1 | center | Energy pickup | complete |
 | pickup-skill | `public/assets/pickups/skill.svg` | 80×80 / 1 | center | Skill pickup | complete |
 | projectile-snowball | `public/assets/projectiles/snowball.svg` | 64×64 / 1 | center | Projectile | complete |

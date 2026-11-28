@@ -9,15 +9,15 @@ The baseline was a functional vertical slice with a flat green board, global web
 runtime shapes and raw debug-style lifecycle copy. The overhaul keeps the deterministic simulation and
 rebuilds the gameplay presentation around a dedicated game viewport:
 
-| Area | Baseline | Current first pass |
-|---|---|---|
-| Gameplay composition | Website shell around the board | Compact HUD, unit rail, dominant battlefield and bottom Trajectory Lab |
-| Mascot and enemies | Primitive Phaser geometry | Local original SVG swallow, fox, boar, raven, guardian and nest assets |
-| Environment | Flat grid | Spring/winter palettes, local backdrop, fence, flowers/snow and tile depth |
-| Combat feedback | Projectile and state changes were easy to miss | Snowball sprite, trail, hit flash, damage number and throw recoil |
-| Economy feedback | Pickup state was not player-readable | Visible nest-produced pickup, pickup-first selection and HUD collection flight |
-| Formula interaction | Single raw input | Game-themed lab, selected-origin copy, parser-compatible shortcut strip |
-| Lifecycle | Technical pause/result state | Player-facing pause label, result overlay, retry/map actions and stale-feedback clearing |
+| Area                 | Baseline                                       | Current first pass                                                                       |
+| -------------------- | ---------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Gameplay composition | Website shell around the board                 | Compact HUD, unit rail, dominant battlefield and bottom Trajectory Lab                   |
+| Mascot and enemies   | Primitive Phaser geometry                      | Local original SVG swallow, fox, boar, raven, guardian and nest assets                   |
+| Environment          | Flat grid                                      | Spring/winter palettes, local backdrop, fence, flowers/snow and tile depth               |
+| Combat feedback      | Projectile and state changes were easy to miss | Snowball sprite, trail, hit flash, damage number and throw recoil                        |
+| Economy feedback     | Pickup state was not player-readable           | Visible nest-produced pickup, pickup-first selection and HUD collection flight           |
+| Formula interaction  | Single raw input                               | Game-themed lab, selected-origin copy, parser-compatible shortcut strip                  |
+| Lifecycle            | Technical pause/result state                   | Player-facing pause label, result overlay, retry/map actions and stale-feedback clearing |
 
 ## Evidence
 

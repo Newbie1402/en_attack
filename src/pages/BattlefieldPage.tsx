@@ -4,13 +4,14 @@ import { Link, useParams } from 'react-router-dom';
 import { getLevelDefinition } from '../content/levels';
 import { GameSession } from '../game/application/session';
 import { markLevelWon, readSave, writeSave } from '../game/application/save';
-import { cellCenter } from '../game/domain/board/board';
+import { cellCenter, type Cell } from '../game/domain/board/board';
 import { sampleTrajectory } from '../game/domain/math/sampler';
 import { validateFormula } from '../game/domain/math/engine';
 import {
   PhaserBattlefieldCanvas,
   type PreviewTrajectory,
 } from '../presentation/phaser/PhaserBattlefieldCanvas';
+import type { UnitKind } from '../game/domain/simulation/types';
 
 const unitOptions = [
   {
@@ -47,10 +48,17 @@ export function BattlefieldPage(): React.JSX.Element {
   const { levelId = 'L1' } = useParams();
   const level = getLevelDefinition(levelId);
   const session = useMemo(() => new GameSession(level.config), [level.config]);
-  const [state, setState] = useState(session.getState());
-  const [formula, setFormula] = useState('0');
+  const initialState = session.getState();
+  const [state, setState] = useState(initialState);
+  const [formula, setFormula] = useState(
+    initialState.units.find((unit) => unit.id === initialState.selectedUnitId)?.assignedFormula
+      ?.source ?? '',
+  );
   const [feedback, setFeedback] = useState('');
+  const [placementKind, setPlacementKind] = useState<UnitKind | null>(null);
+  const [relocationUnitId, setRelocationUnitId] = useState<string | null>(null);
   const formulaInputRef = useRef<HTMLInputElement>(null);
+  const editorUnitRef = useRef<string | null>(initialState.selectedUnitId);
   const preview = useMemo<PreviewTrajectory | null>(() => {
     if (!state.previewAllowed) return null;
     const unit =
@@ -69,6 +77,13 @@ export function BattlefieldPage(): React.JSX.Element {
 
   useEffect(() => {
     return session.subscribe((nextState, events) => {
+      if (nextState.selectedUnitId !== editorUnitRef.current) {
+        editorUnitRef.current = nextState.selectedUnitId;
+        setFormula(
+          nextState.units.find((unit) => unit.id === nextState.selectedUnitId)?.assignedFormula
+            ?.source ?? '',
+        );
+      }
       if (events.length > 0 || nextState.tick % 6 === 0) setState(nextState);
       const rejected = events.find((event) => event.type === 'commandRejected');
       if (events.some((event) => event.type === 'matchEnded' && event.result === 'won')) {
@@ -84,8 +99,23 @@ export function BattlefieldPage(): React.JSX.Element {
           SKILL_COOLDOWN: 'Kỹ năng thời gian đang hồi.',
           PICKUP_NOT_READY: 'Vật phẩm vẫn đang nở, hãy đợi một chút.',
           INVENTORY_FULL: 'Kho đã đầy; vật phẩm vẫn ở trên sân.',
+          NO_FORMULA: 'Phi công này chưa có công thức hoạt động.',
+          FORMULA_CONFLICT: 'Công thức này đang được dùng bởi một phi công khác.',
+          RELOCATION_COOLDOWN: 'Én vừa đổi vị trí; hãy đợi hồi chiêu di chuyển.',
+          INSUFFICIENT_ENERGY: 'Không đủ năng lượng cho thao tác này.',
+          FORBIDDEN_CELL: 'Ô này không thể triển khai hoặc đang bị chặn.',
+          NEST_STATIONARY: 'Tổ may mắn không thể di chuyển.',
         };
         setFeedback(messages[rejected.reason] ?? 'Lệnh chưa thể thực hiện.');
+      } else if (events.some((event) => event.type === 'formulaConflict')) {
+        const conflict = events.find((event) => event.type === 'formulaConflict');
+        if (conflict?.type === 'formulaConflict') {
+          const ownerNumber =
+            nextState.units.findIndex((unit) => unit.id === conflict.ownerUnitId) + 1;
+          setFeedback(`Công thức này đang được sử dụng bởi Én số ${Math.max(ownerNumber, 1)}.`);
+        }
+      } else if (events.some((event) => event.type === 'formulaAssigned')) {
+        setFeedback('Đã gắn công thức. Phi công sẽ tự phóng khi có mục tiêu.');
       } else if (
         events.some((event) => event.type === 'shotFired' || event.type === 'skillActivated')
       ) {
@@ -114,9 +144,9 @@ export function BattlefieldPage(): React.JSX.Element {
   const start = () => {
     session.dispatch({ type: 'start' });
   };
-  const fire = () => {
-    if (selectedUnitId !== undefined) {
-      session.dispatch({ type: 'fire', unitId: selectedUnitId, expression: formula });
+  const applyFormula = () => {
+    if (selectedUnitId !== undefined && selectedUnit?.kind !== 'nest') {
+      session.dispatch({ type: 'assignFormula', unitId: selectedUnitId, expression: formula });
     }
   };
   const togglePause = () => {
@@ -143,16 +173,30 @@ export function BattlefieldPage(): React.JSX.Element {
       input.setSelectionRange(caret, caret);
     });
   };
-  const placeUnit = (kind: 'snow' | 'frost' | 'heavy' | 'nest') => {
-    const occupied = new Set(state.units.map((unit) => `${unit.cell.col}:${unit.cell.row}`));
-    for (let row = 0; row < state.board.rows; row += 1) {
-      for (let col = 0; col < state.board.deploymentColumns; col += 1) {
-        if (!occupied.has(`${col}:${row}`)) {
-          session.dispatch({ type: 'placeUnit', kind, cell: { col, row } });
-          return;
-        }
-      }
+  const selectPlacement = (kind: UnitKind) => {
+    setRelocationUnitId(null);
+    setPlacementKind((current) => (current === kind ? null : kind));
+  };
+  const handleBoardCell = (cell: Cell) => {
+    if (placementKind !== null) {
+      session.dispatch({ type: 'placeUnit', kind: placementKind, cell });
+      setPlacementKind(null);
+      return;
     }
+    if (relocationUnitId !== null) {
+      session.dispatch({ type: 'moveUnit', unitId: relocationUnitId, cell });
+      setRelocationUnitId(null);
+    }
+  };
+  const beginRelocation = () => {
+    if (selectedUnit !== undefined && selectedUnit.kind !== 'nest') {
+      setPlacementKind(null);
+      setRelocationUnitId(selectedUnit.id);
+    }
+  };
+  const cancelBoardMode = () => {
+    setPlacementKind(null);
+    setRelocationUnitId(null);
   };
   const activateSkill = (skill: 'slow' | 'freeze' | 'doubleDamage' | 'formulaReset') => {
     const bucketId = state.formulaRegistry.buckets.find((bucket) => bucket.uses > 0)?.id;
@@ -223,7 +267,10 @@ export function BattlefieldPage(): React.JSX.Element {
                 key={option.kind}
                 type="button"
                 disabled={state.energy < option.cost || !['ready', 'running'].includes(state.mode)}
-                onClick={() => placeUnit(option.kind)}
+                aria-pressed={placementKind === option.kind}
+                draggable
+                onDragStart={() => selectPlacement(option.kind)}
+                onClick={() => selectPlacement(option.kind)}
               >
                 <img src={option.asset} alt="" aria-hidden="true" />
                 <span className="unit-card-copy">
@@ -249,10 +296,24 @@ export function BattlefieldPage(): React.JSX.Element {
                     : 'Én tuyết'}
             </strong>
             <small>
-              {selectedUnit?.kind === 'nest'
-                ? 'Tổ không phóng tuyết cầu'
-                : 'Công thức sẽ bắt đầu tại ô này'}
+              {selectedUnit === undefined
+                ? 'Chưa chọn phi công'
+                : selectedUnit.kind === 'nest'
+                  ? 'Tổ không phóng tuyết cầu'
+                  : selectedUnit.assignedFormula === null
+                    ? 'Chưa có công thức · cần gắn trước khi tự chiến đấu'
+                    : `${selectedUnit.attackState} · ${selectedUnit.assignedFormula.source}`}
             </small>
+            {selectedUnit !== undefined && selectedUnit.kind !== 'nest' && (
+              <button className="rail-action" type="button" onClick={beginRelocation}>
+                Đổi vị trí · {state.economy.relocationCost}
+              </button>
+            )}
+            {(placementKind !== null || relocationUnitId !== null) && (
+              <button className="rail-cancel" type="button" onClick={cancelBoardMode}>
+                Hủy thao tác
+              </button>
+            )}
           </div>
         </aside>
 
@@ -271,7 +332,15 @@ export function BattlefieldPage(): React.JSX.Element {
             </span>
           </div>
           <div className="battlefield-stage">
-            <PhaserBattlefieldCanvas session={session} preview={preview} theme={level.theme} />
+            <PhaserBattlefieldCanvas
+              session={session}
+              preview={preview}
+              theme={level.theme}
+              placementKind={placementKind}
+              relocationUnitId={relocationUnitId}
+              onBoardCell={handleBoardCell}
+              onCancel={cancelBoardMode}
+            />
           </div>
         </main>
       </div>
@@ -340,6 +409,12 @@ export function BattlefieldPage(): React.JSX.Element {
               id="formula"
               value={formula}
               onChange={(event) => setFormula(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  event.preventDefault();
+                  applyFormula();
+                }
+              }}
               aria-describedby="formula-help"
             />
             {state.mode === 'ready' && (
@@ -351,10 +426,20 @@ export function BattlefieldPage(): React.JSX.Element {
               <button
                 className="button button-primary"
                 type="button"
-                onClick={fire}
+                onClick={applyFormula}
                 disabled={selectedUnit?.kind === 'nest'}
               >
-                Phóng tuyết cầu
+                Áp dụng công thức
+              </button>
+            )}
+            {state.mode === 'ready' && (
+              <button
+                className="button button-secondary"
+                type="button"
+                onClick={applyFormula}
+                disabled={selectedUnit?.kind === 'nest'}
+              >
+                Gắn công thức
               </button>
             )}
             {(state.mode === 'won' || state.mode === 'lost') && (
@@ -382,7 +467,8 @@ export function BattlefieldPage(): React.JSX.Element {
           </div>
           <div className="formula-lab-meta">
             <span id="formula-help">
-              Đi qua (0, 0) · thử <code>0.5x</code> hoặc <code>-0.08x^2 + 0.6x</code>
+              Đi qua (0, 0) · tự động phóng khi có mục tiêu · thử <code>0.5x</code> hoặc{' '}
+              <code>-0.08x^2 + 0.6x</code>
             </span>
             <span className="formula-feedback" role="status">
               {feedback}

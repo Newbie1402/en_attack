@@ -48,7 +48,7 @@ describe('tactical skills', () => {
     const rejected = stepSimulation(state, [{ type: 'fire', unitId, expression: 'x+2' }]);
     expect(rejected.state.effects.doubleDamageArmed).toBe(true);
     const fired = stepSimulation(rejected.state, [{ type: 'fire', unitId, expression: '0' }]);
-    expect(fired.state.projectiles[0]?.damage).toBe(120);
+    expect(fired.state.projectiles[0]?.damage).toBe(50);
     expect(fired.state.effects.doubleDamageArmed).toBe(false);
     expect(fired.state.skillStock.doubleDamage).toBe(0);
   });

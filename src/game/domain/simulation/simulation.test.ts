@@ -66,7 +66,7 @@ describe('fixed-step simulation commands', () => {
     const result = run(state, 50);
     const hits = result.events.filter((event) => event.type === 'hit');
     expect(hits).toHaveLength(1);
-    expect(result.state.enemies[0]?.health).toBe(30);
+    expect(result.state.enemies[0]?.health).toBe(75);
   });
 
   it('stops a projectile at an obstacle before an enemy behind it', () => {
