@@ -1,4 +1,4 @@
-import { Navigate, NavLink, Route, Routes } from 'react-router-dom';
+import { Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom';
 
 import { BattlefieldPage } from '../pages/BattlefieldPage';
 import { BestiaryPage } from '../pages/BestiaryPage';
@@ -16,31 +16,35 @@ const navigation = [
 ];
 
 export function App(): React.JSX.Element {
+  const location = useLocation();
+  const isGameplay = location.pathname.startsWith('/play/');
   return (
-    <div className="app-shell">
-      <header className="topbar">
-        <NavLink className="brand-lockup" to="/" aria-label="SnowGraph trang chủ">
-          <span className="brand-mark" aria-hidden="true">
-            ✦
-          </span>
-          <span>
-            <strong>SnowGraph</strong>
-            <small>The Swallow Defense</small>
-          </span>
-        </NavLink>
-        <nav aria-label="Điều hướng chính">
-          {navigation.map((item) => (
-            <NavLink
-              className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}
-              end={item.href === '/'}
-              key={item.href}
-              to={item.href}
-            >
-              {item.label}
-            </NavLink>
-          ))}
-        </nav>
-      </header>
+    <div className={isGameplay ? 'app-shell gameplay-shell' : 'app-shell'}>
+      {!isGameplay && (
+        <header className="topbar">
+          <NavLink className="brand-lockup" to="/" aria-label="SnowGraph trang chủ">
+            <span className="brand-mark" aria-hidden="true">
+              ✦
+            </span>
+            <span>
+              <strong>SnowGraph</strong>
+              <small>The Swallow Defense</small>
+            </span>
+          </NavLink>
+          <nav aria-label="Điều hướng chính">
+            {navigation.map((item) => (
+              <NavLink
+                className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}
+                end={item.href === '/'}
+                key={item.href}
+                to={item.href}
+              >
+                {item.label}
+              </NavLink>
+            ))}
+          </nav>
+        </header>
+      )}
       <main>
         <Routes>
           <Route path="/" element={<HomePage />} />
