@@ -1,0 +1,283 @@
+{
+  "schemaVersion": 1,
+  "packId": "snowgraph-pack02-enemies-and-armor-v1",
+  "purpose": "Merge proposal: map existing runtime IDs; do not overwrite unrelated entries",
+  "assets": [
+    {
+      "id": "enemy-fox-idle",
+      "kind": "image",
+      "file": "assets/characters/enemies/fox/idle.png",
+      "width": 256,
+      "height": 256,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "generated-and-processed",
+      "anchor": {
+        "x": 0.5,
+        "y": 0.921875
+      },
+      "facing": "left",
+      "displayHeightInTiles": 1.05,
+      "clips": {
+        "move": {
+          "frames": [0],
+          "method": "subtle bob tween",
+          "durationMs": 400,
+          "loop": true
+        },
+        "hit": {
+          "frames": [0],
+          "method": "tint/recoil",
+          "durationMs": 100,
+          "loop": false
+        },
+        "defeat": {
+          "frames": [0],
+          "method": "fade/squash",
+          "durationMs": 220,
+          "loop": false
+        }
+      }
+    },
+    {
+      "id": "enemy-fox-portrait",
+      "kind": "image",
+      "file": "assets/characters/enemies/fox/portrait.png",
+      "width": 192,
+      "height": 192,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "generated-and-processed"
+    },
+    {
+      "id": "enemy-rabbit-idle",
+      "kind": "image",
+      "file": "assets/characters/enemies/rabbit/idle.png",
+      "width": 256,
+      "height": 256,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "generated-and-processed",
+      "anchor": {
+        "x": 0.5,
+        "y": 0.921875
+      },
+      "facing": "left",
+      "displayHeightInTiles": 1.05,
+      "clips": {
+        "move": {
+          "frames": [0],
+          "method": "subtle bob tween",
+          "durationMs": 400,
+          "loop": true
+        },
+        "hit": {
+          "frames": [0],
+          "method": "tint/recoil",
+          "durationMs": 100,
+          "loop": false
+        },
+        "defeat": {
+          "frames": [0],
+          "method": "fade/squash",
+          "durationMs": 220,
+          "loop": false
+        }
+      }
+    },
+    {
+      "id": "enemy-rabbit-portrait",
+      "kind": "image",
+      "file": "assets/characters/enemies/rabbit/portrait.png",
+      "width": 192,
+      "height": 192,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "generated-and-processed"
+    },
+    {
+      "id": "enemy-armored-boar-idle",
+      "kind": "image",
+      "file": "assets/characters/enemies/armored-boar/idle.png",
+      "width": 256,
+      "height": 256,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "generated-and-processed",
+      "anchor": {
+        "x": 0.5,
+        "y": 0.921875
+      },
+      "facing": "left",
+      "displayHeightInTiles": 1.05,
+      "clips": {
+        "move": {
+          "frames": [0],
+          "method": "subtle bob tween",
+          "durationMs": 400,
+          "loop": true
+        },
+        "hit": {
+          "frames": [0],
+          "method": "tint/recoil",
+          "durationMs": 100,
+          "loop": false
+        },
+        "defeat": {
+          "frames": [0],
+          "method": "fade/squash",
+          "durationMs": 220,
+          "loop": false
+        }
+      }
+    },
+    {
+      "id": "enemy-armored-boar-portrait",
+      "kind": "image",
+      "file": "assets/characters/enemies/armored-boar/portrait.png",
+      "width": 192,
+      "height": 192,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "generated-and-processed"
+    },
+    {
+      "id": "enemy-crystal-turtle-idle",
+      "kind": "image",
+      "file": "assets/characters/enemies/crystal-turtle/idle.png",
+      "width": 256,
+      "height": 256,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "generated-and-processed",
+      "anchor": {
+        "x": 0.5,
+        "y": 0.921875
+      },
+      "facing": "left",
+      "displayHeightInTiles": 1.05,
+      "clips": {
+        "move": {
+          "frames": [0],
+          "method": "subtle bob tween",
+          "durationMs": 400,
+          "loop": true
+        },
+        "hit": {
+          "frames": [0],
+          "method": "tint/recoil",
+          "durationMs": 100,
+          "loop": false
+        },
+        "defeat": {
+          "frames": [0],
+          "method": "fade/squash",
+          "durationMs": 220,
+          "loop": false
+        }
+      }
+    },
+    {
+      "id": "enemy-crystal-turtle-portrait",
+      "kind": "image",
+      "file": "assets/characters/enemies/crystal-turtle/portrait.png",
+      "width": 192,
+      "height": 192,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "generated-and-processed"
+    },
+    {
+      "id": "enemy-raven-idle",
+      "kind": "image",
+      "file": "assets/characters/enemies/raven/idle.png",
+      "width": 256,
+      "height": 256,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "generated-and-processed",
+      "anchor": {
+        "x": 0.5,
+        "y": 0.921875
+      },
+      "facing": "left",
+      "displayHeightInTiles": 1.05,
+      "clips": {
+        "move": {
+          "frames": [0],
+          "method": "subtle bob tween",
+          "durationMs": 400,
+          "loop": true
+        },
+        "hit": {
+          "frames": [0],
+          "method": "tint/recoil",
+          "durationMs": 100,
+          "loop": false
+        },
+        "defeat": {
+          "frames": [0],
+          "method": "fade/squash",
+          "durationMs": 220,
+          "loop": false
+        }
+      }
+    },
+    {
+      "id": "enemy-raven-portrait",
+      "kind": "image",
+      "file": "assets/characters/enemies/raven/portrait.png",
+      "width": 192,
+      "height": 192,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "generated-and-processed"
+    },
+    {
+      "id": "enemy-frost-wolf-idle",
+      "kind": "image",
+      "file": "assets/characters/enemies/frost-wolf/idle.png",
+      "width": 256,
+      "height": 256,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "generated-and-processed",
+      "anchor": {
+        "x": 0.5,
+        "y": 0.921875
+      },
+      "facing": "left",
+      "displayHeightInTiles": 1.05,
+      "clips": {
+        "move": {
+          "frames": [0],
+          "method": "subtle bob tween",
+          "durationMs": 400,
+          "loop": true
+        },
+        "hit": {
+          "frames": [0],
+          "method": "tint/recoil",
+          "durationMs": 100,
+          "loop": false
+        },
+        "defeat": {
+          "frames": [0],
+          "method": "fade/squash",
+          "durationMs": 220,
+          "loop": false
+        }
+      }
+    },
+    {
+      "id": "enemy-frost-wolf-portrait",
+      "kind": "image",
+      "file": "assets/characters/enemies/frost-wolf/portrait.png",
+      "width": 192,
+      "height": 192,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "generated-and-processed"
+    }
+  ]
+}

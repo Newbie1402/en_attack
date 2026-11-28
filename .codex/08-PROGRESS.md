@@ -169,3 +169,24 @@ are not claimed. Reference PNGs were inspected visually and remain outside runti
   transferred; no individual RGBA frames are present in `public/assets/characters/swallows/`.
 - Next exact task: obtain the actual PNG files, validate dimensions/alpha/anchors, integrate one atlas per
   swallow variant, run browser visual QA on spring and winter, and send the evidence back for Pack 02 review.
+
+## 2026-11-28 — Full six-pack runtime candidate integration — PASS WITH OPEN ART GATES
+
+- Inputs: received full bundle from the shared art chat; 126 files including 78 PNG and 10 WAV, plus per-pack
+  manifests, task notes and offline validation. `integration/ALL-PACKS-VALIDATION.txt` records offline PASS for
+  Packs 01–06 and explicitly does not claim repository, Phaser, visual, licensing or performance approval.
+- Changes: integrated authored swallow pose sheets/portraits, enemy idle art, seasonal tiles/scenic strips, nest,
+  pickups, projectiles, VFX, UI skins and local audio in `src/presentation/assets/assetManifest.ts` and
+  `PhaserBattlefieldCanvas`. Added event-driven cosmetic pose/effect/audio feedback, typed loader branches,
+  terrain rendering, CSS panel/button skins, pack-manifest file validation and repository handoff docs.
+- Evidence: `npm run lint` exit 0; `npm run format:check` exit 0; `npm run assets:check` exit 0 (`27 base entries`,
+  `7 pack manifests checked`); `npm run typecheck` exit 0; `npm test` exit 0 (10 files / 34 tests); `npm run build`
+  exit 0; `npm run test:e2e` exit 0 (10 Chromium tests). Browser screenshots were regenerated and visually inspected
+  at 1440×900 for spring and winter. Build retains the non-blocking Phaser chunk warning; browser output has only
+  React Router future-flag and Node deprecation warnings.
+- Acceptance: authored runtime files load through Phaser, simulation remains the authority for projectiles/damage,
+  no screenshot is used as a game background, and existing gameplay/economy/pickup/wave routes remain green.
+- Not claimed: owner visual sign-off, final production art, rights/licensing review, 10-minute performance profile,
+  CSP/security audit, or release packaging. `npm audit --omit=dev` remains deferred with two moderate Router advisories.
+- Next exact task: run the remaining visual art acceptance and performance/security gates, then land this integration
+  on a new feature branch PR after reviewing the binary diff.

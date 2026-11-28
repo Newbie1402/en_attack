@@ -1,6 +1,6 @@
 /* global console, process */
 
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const root = process.cwd();
@@ -25,4 +25,31 @@ for (const asset of manifest.assets) {
 }
 
 if (errors.length > 0) throw new Error(`Asset manifest failed:\n${errors.join('\n')}`);
-console.log(`Asset manifest valid: ${manifest.assets.length} entries; ${ids.size} unique ids.`);
+
+const manifestDir = resolve(root, 'public/assets/manifests');
+const packManifests = readdirSync(manifestDir).filter((file) => /^pack\d.*\.json$/.test(file));
+const packErrors = [];
+const collectFiles = (value) => {
+  if (Array.isArray(value)) return value.flatMap(collectFiles);
+  if (value === null || typeof value !== 'object') return [];
+  const files = typeof value.file === 'string' ? [value.file] : [];
+  return files.concat(Object.values(value).flatMap(collectFiles));
+};
+for (const file of packManifests) {
+  const pack = JSON.parse(readFileSync(resolve(manifestDir, file), 'utf8'));
+  for (const assetFile of collectFiles(pack)) {
+    const relativeFile = assetFile.replace(/^\//, '');
+    const localPath = resolve(
+      root,
+      'public',
+      relativeFile.startsWith('assets/') ? relativeFile : `assets/${relativeFile}`,
+    );
+    if (!existsSync(localPath)) packErrors.push(`${file}: missing ${assetFile}`);
+  }
+}
+
+if (packErrors.length > 0)
+  throw new Error(`Pack asset manifests failed:\n${packErrors.join('\n')}`);
+console.log(
+  `Asset manifests valid: ${manifest.assets.length} base entries; ${ids.size} unique ids; ${packManifests.length} pack manifests checked.`,
+);

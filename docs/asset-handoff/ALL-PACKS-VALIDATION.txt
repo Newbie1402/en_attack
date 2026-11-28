@@ -1,0 +1,7 @@
+SnowGraph-Pack01-runtime-v1.1.zip: 18 runtime RGBA PNGs; 0 WAV; 25 total files; zip/manifest/atlas validation PASS; sha256=a36826a7f1fff9086c16fd4c5e1fe0b26158dd9c41eeda62671fc9e043c94f2c
+SnowGraph-Pack02-runtime-v1.zip: 12 runtime RGBA PNGs; 0 WAV; 18 total files; zip/manifest/atlas validation PASS; sha256=8e1c6f2e18f82bd8a0d32d0ecb04cf11829e8ffa5391e3cce458abd04d45e658
+SnowGraph-Pack03-runtime-v1.zip: 15 runtime RGBA PNGs; 0 WAV; 20 total files; zip/manifest/atlas validation PASS; sha256=964b9c1c3a5651ab6af8b828ccc1eeb432bfd53ae2ae043a835be035e6c07e5c
+SnowGraph-Pack04-runtime-v1.zip: 16 runtime RGBA PNGs; 0 WAV; 21 total files; zip/manifest/atlas validation PASS; sha256=c80117c3770b45d7238d217a24b6884dcee5ca3ab924eac93fe0f7d7d02ab497
+SnowGraph-Pack05-runtime-v1.zip: 10 runtime RGBA PNGs; 0 WAV; 15 total files; zip/manifest/atlas validation PASS; sha256=e3b6e67e03bf85d44fb55d126f909dadebe0beb6e7e8968c755d4226e46a1240
+SnowGraph-Pack06-runtime-v1.zip: 7 runtime RGBA PNGs; 10 WAV; 24 total files; zip/manifest/atlas validation PASS; sha256=7bd37cee911f5d1b3498280c3764e0f02631795a7d09dc7a396e2da6095f1e22
+No repository, Phaser runtime, visual acceptance, licensing approval, playback/listening, or performance verification performed. User-reported previous tests do not certify these new files.

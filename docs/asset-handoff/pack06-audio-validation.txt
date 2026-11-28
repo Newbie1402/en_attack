@@ -1,0 +1,11 @@
+assets/audio/sfx/select.wav | 120ms | 22050Hz PCM mono | d97f8a53cd4c1cf22be381268bb3ab6359d2468dc3cfae9927f8ca7836f21b74
+assets/audio/sfx/place.wav | 220ms | 22050Hz PCM mono | 773b18c3709a79e80aa0692e5d411d79731d33f13b4f55210b252ff30de98b99
+assets/audio/sfx/throw.wav | 280ms | 22050Hz PCM mono | c832ceef57b6e6aba10348c299b80327adb2d933043efb7ffea7aa749ee72954
+assets/audio/sfx/impact.wav | 240ms | 22050Hz PCM mono | eec241c253ee1026b5e39e75f480dd6c42566add4b976fc503da12b1d8f14e34
+assets/audio/sfx/pickup.wav | 320ms | 22050Hz PCM mono | fef534b972d057fba440e14e03b4760e709aaec1e66229ac10f5717d42b165fb
+assets/audio/sfx/freeze.wav | 550ms | 22050Hz PCM mono | 3dea321fbae96d4009ab3c95f7f07b2abfb746cd42bdc3527caa07fac0e841ba
+assets/audio/sfx/armor-break.wav | 320ms | 22050Hz PCM mono | 0d5a79dca6544c5b15455f12f319fee8b541aadbc2d48f771c2bcf1e5fbec6ee
+assets/audio/sfx/victory.wav | 1300ms | 22050Hz PCM mono | 2c38ac122f6c76bd3800b9d090327ec277e90caa7e5a396babf191a0d9be7115
+assets/audio/sfx/defeat.wav | 800ms | 22050Hz PCM mono | eda4b6d9cb3a2b1afa9af5db8e2f546d3aa1f15177fdfd465f84d8418404b3b7
+assets/audio/music/garden-sketch-loop.wav | 8000ms | 22050Hz PCM mono | 03385c2767626a0ac173ef7c352eb653b5af63ec3018646a7739d53f6dc534f9
+WAV headers and frame counts checked; listening/mix/browser tests NOT RUN.

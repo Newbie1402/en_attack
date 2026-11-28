@@ -1,0 +1,243 @@
+{
+  "schemaVersion": 1,
+  "packId": "snowgraph-pack04-lucky-nest-and-pickups-v1",
+  "purpose": "Merge proposal: map existing runtime IDs; do not overwrite unrelated entries",
+  "assets": [
+    {
+      "id": "lucky-nest-idle",
+      "kind": "image",
+      "file": "assets/nests/lucky-nest/idle.png",
+      "width": 256,
+      "height": 256,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "approved-concept-masked-crop",
+      "anchor": {
+        "x": 0.5,
+        "y": 0.86
+      },
+      "clips": {
+        "idle": {
+          "frames": [0],
+          "method": "pose+tween",
+          "durationMs": 1500,
+          "loop": true
+        },
+        "shake": {
+          "frames": [0],
+          "method": "rotation ±3deg",
+          "durationMs": 400,
+          "loop": false
+        }
+      }
+    },
+    {
+      "id": "lucky-nest-portrait",
+      "kind": "image",
+      "file": "assets/nests/lucky-nest/portrait.png",
+      "width": 192,
+      "height": 192,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "approved-concept-masked-crop"
+    },
+    {
+      "id": "pickup-slow-collectible",
+      "kind": "image",
+      "file": "assets/pickups/slow/collectible.png",
+      "width": 128,
+      "height": 128,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "approved-concept-masked-crop",
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "id": "pickup-slow-hud",
+      "kind": "image",
+      "file": "assets/pickups/slow/hud.png",
+      "width": 64,
+      "height": 64,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "approved-concept-masked-crop",
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "id": "pickup-freeze-collectible",
+      "kind": "image",
+      "file": "assets/pickups/freeze/collectible.png",
+      "width": 128,
+      "height": 128,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "approved-concept-masked-crop",
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "id": "pickup-freeze-hud",
+      "kind": "image",
+      "file": "assets/pickups/freeze/hud.png",
+      "width": 64,
+      "height": 64,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "approved-concept-masked-crop",
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "id": "pickup-damage-boost-collectible",
+      "kind": "image",
+      "file": "assets/pickups/damage-boost/collectible.png",
+      "width": 128,
+      "height": 128,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "approved-concept-masked-crop",
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "id": "pickup-damage-boost-hud",
+      "kind": "image",
+      "file": "assets/pickups/damage-boost/hud.png",
+      "width": 64,
+      "height": 64,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "approved-concept-masked-crop",
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "id": "pickup-formula-reset-collectible",
+      "kind": "image",
+      "file": "assets/pickups/formula-reset/collectible.png",
+      "width": 128,
+      "height": 128,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "approved-concept-masked-crop",
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "id": "pickup-formula-reset-hud",
+      "kind": "image",
+      "file": "assets/pickups/formula-reset/hud.png",
+      "width": 64,
+      "height": 64,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "approved-concept-masked-crop",
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "id": "pickup-energy-collectible",
+      "kind": "image",
+      "file": "assets/pickups/energy/collectible.png",
+      "width": 128,
+      "height": 128,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "approved-concept-masked-crop",
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "id": "pickup-energy-hud",
+      "kind": "image",
+      "file": "assets/pickups/energy/hud.png",
+      "width": 64,
+      "height": 64,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "approved-concept-masked-crop",
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "id": "pickup-relocate-collectible",
+      "kind": "image",
+      "file": "assets/pickups/relocate/collectible.png",
+      "width": 128,
+      "height": 128,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "procedural-ui-symbol",
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "optional": true
+    },
+    {
+      "id": "pickup-relocate-hud",
+      "kind": "image",
+      "file": "assets/pickups/relocate/hud.png",
+      "width": 64,
+      "height": 64,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "procedural-ui-symbol",
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "optional": true
+    },
+    {
+      "id": "nest-crack-overlay",
+      "kind": "image",
+      "file": "assets/nests/lucky-nest/crack-overlay.png",
+      "width": 128,
+      "height": 128,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "procedural-vfx",
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "id": "nest-shell-fragment",
+      "kind": "image",
+      "file": "assets/nests/lucky-nest/shell-fragment.png",
+      "width": 128,
+      "height": 128,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "procedural-vfx",
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  ]
+}

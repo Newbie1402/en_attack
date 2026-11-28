@@ -19,28 +19,28 @@ const unitOptions = [
     name: 'Én tuyết',
     role: 'Cân bằng',
     cost: 100,
-    asset: '/assets/characters/swallows/normal/swallow-normal.svg',
+    asset: '/assets/characters/swallows/normal/portrait.png',
   },
   {
     kind: 'frost' as const,
     name: 'Én băng',
     role: 'Làm chậm',
     cost: 175,
-    asset: '/assets/characters/swallows/frost/swallow-frost.svg',
+    asset: '/assets/characters/swallows/frost/portrait.png',
   },
   {
     kind: 'heavy' as const,
     name: 'Én nặng',
     role: 'Cú ném mạnh',
     cost: 250,
-    asset: '/assets/characters/swallows/heavy/swallow-heavy.svg',
+    asset: '/assets/characters/swallows/heavy/portrait.png',
   },
   {
     kind: 'nest' as const,
     name: 'Tổ may mắn',
     role: 'Tạo vật phẩm',
     cost: 50,
-    asset: '/assets/characters/swallows/nest-lucky.svg',
+    asset: '/assets/nests/lucky-nest/portrait.png',
   },
 ];
 

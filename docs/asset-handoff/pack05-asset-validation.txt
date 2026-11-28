@@ -1,0 +1,11 @@
+assets/projectiles/snowball-normal/sprite.png RGBA (128, 128) alpha=(0, 255) sha256=2f39cce7b7de45ca90318572a35030013b709e04005d787514f11afa9a09d9a9
+assets/projectiles/snowball-frost/sprite.png RGBA (128, 128) alpha=(0, 255) sha256=9788e218f5b67e1bd8d4841eb00b3759f9b0fe65843d691aacbc6e224c0cced4
+assets/projectiles/snowball-heavy/sprite.png RGBA (128, 128) alpha=(0, 255) sha256=2f39cce7b7de45ca90318572a35030013b709e04005d787514f11afa9a09d9a9
+assets/effects/hit/frames.png RGBA (1536, 256) alpha=(0, 243) sha256=8584906bb2a57598b650f03128c08b357b3b2403f35f27e04a700b4ce9d98616
+assets/effects/freeze/frames.png RGBA (1536, 256) alpha=(0, 240) sha256=7624235c8746b53f7b37a56d5663fbfdc2f6dae5d082574d8b688db17e3e895e
+assets/effects/armor-break/frames.png RGBA (1536, 256) alpha=(0, 243) sha256=d08c0b766589e0fb2e6f72d502c9c9ac3fc7bbfa4fae5079d8b6944d85897eb9
+assets/effects/shield/frames.png RGBA (1536, 256) alpha=(0, 232) sha256=c20fb61616e28a822f68ef0b0846c45730d5d603451c354c11c35f849bdad100
+assets/effects/defeat/frames.png RGBA (1536, 256) alpha=(0, 237) sha256=8b97050729421231a65cd401e44dc1637037cdc9ca36ce76ad04abed6a59b516
+assets/effects/pickup-sparkle/frames.png RGBA (1536, 256) alpha=(0, 230) sha256=2d7fe1ebab99b2d7fa63e4adf6c7cfc5d2bee4661a68ef563bb69fe55afff421
+assets/effects/trails/snow-particle.png RGBA (64, 64) alpha=(0, 192) sha256=51b0f37c3d35f60f731757a124463681bd149ef8b9a7ec83c13ac26e8e8e6bd8
+Offline dimensions, file existence and PNG decode checked. Runtime NOT RUN.

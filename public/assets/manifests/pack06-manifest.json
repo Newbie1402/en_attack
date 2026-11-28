@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "packId": "snowgraph-pack06-ui-kit-and-audio-v1",
+  "purpose": "Merge proposal: map existing runtime IDs; do not overwrite unrelated entries",
+  "assets": [
+    {
+      "id": "ui-panel-wood",
+      "kind": "image",
+      "file": "assets/ui/panel-wood.png",
+      "width": 192,
+      "height": 128,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "procedural-ui-frame",
+      "nineSlice": {
+        "left": 24,
+        "right": 24,
+        "top": 22,
+        "bottom": 24
+      },
+      "contentPadding": 16
+    },
+    {
+      "id": "ui-button-primary",
+      "kind": "image",
+      "file": "assets/ui/button-primary.png",
+      "width": 192,
+      "height": 80,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "procedural-ui-frame",
+      "nineSlice": {
+        "left": 24,
+        "right": 24,
+        "top": 22,
+        "bottom": 24
+      },
+      "contentPadding": 16
+    },
+    {
+      "id": "ui-button-secondary",
+      "kind": "image",
+      "file": "assets/ui/button-secondary.png",
+      "width": 192,
+      "height": 80,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "procedural-ui-frame",
+      "nineSlice": {
+        "left": 24,
+        "right": 24,
+        "top": 22,
+        "bottom": 24
+      },
+      "contentPadding": 16
+    },
+    {
+      "id": "ui-button-disabled",
+      "kind": "image",
+      "file": "assets/ui/button-disabled.png",
+      "width": 192,
+      "height": 80,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "procedural-ui-frame",
+      "nineSlice": {
+        "left": 24,
+        "right": 24,
+        "top": 22,
+        "bottom": 24
+      },
+      "contentPadding": 16
+    },
+    {
+      "id": "ui-tooltip",
+      "kind": "image",
+      "file": "assets/ui/tooltip.png",
+      "width": 192,
+      "height": 80,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "procedural-ui-frame",
+      "nineSlice": {
+        "left": 24,
+        "right": 24,
+        "top": 22,
+        "bottom": 24
+      },
+      "contentPadding": 16
+    },
+    {
+      "id": "ui-bar-frame",
+      "kind": "image",
+      "file": "assets/ui/bar-frame.png",
+      "width": 192,
+      "height": 48,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "procedural-ui-frame",
+      "nineSlice": {
+        "left": 24,
+        "right": 24,
+        "top": 18,
+        "bottom": 18
+      },
+      "contentPadding": 16
+    },
+    {
+      "id": "ui-heart",
+      "kind": "image",
+      "file": "assets/ui/heart.png",
+      "width": 128,
+      "height": 128,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "procedural-ui-symbol"
+    }
+  ]
+}
