@@ -1,0 +1,17 @@
+assets/nests/lucky-nest/idle.png RGBA (256, 256) alpha=(0, 255) sha256=02d61c7d9c84c80c21f3dd521396da5a9e56fea114274b61220312aed796aee9
+assets/nests/lucky-nest/portrait.png RGBA (192, 192) alpha=(0, 255) sha256=1c5ebdc08c5dbcc7bf490bcd5e5e77488fa1f408e7fd463719c376cc22901511
+assets/pickups/slow/collectible.png RGBA (128, 128) alpha=(0, 255) sha256=bfc4ba0b77b6d8a5b02eef3a365fae8d061cdcc1eca40ac6a96d2ee0825e8e71
+assets/pickups/slow/hud.png RGBA (64, 64) alpha=(0, 255) sha256=73f4e2ec665d302341b406ae1b369da01d0630b722ab58da640c26f1bbd50940
+assets/pickups/freeze/collectible.png RGBA (128, 128) alpha=(0, 255) sha256=68a19858b347868fc17fb8757a329564e712cfc69204a1aa4386249ab05c5472
+assets/pickups/freeze/hud.png RGBA (64, 64) alpha=(0, 255) sha256=7ce9e308dd026268a854d6324fb7c0808b7fca144503665763f2db513d95f7fe
+assets/pickups/damage-boost/collectible.png RGBA (128, 128) alpha=(0, 255) sha256=8fe85e310c6a3e851843edfd04fbd33dfb3ba4c651614ebc6e1a04b08f38b206
+assets/pickups/damage-boost/hud.png RGBA (64, 64) alpha=(0, 255) sha256=3f814a2d0ea5032e963375b2f2ba41722391a96b964ccb991a86f53bc0f73fa3
+assets/pickups/formula-reset/collectible.png RGBA (128, 128) alpha=(0, 255) sha256=872800eb5209a45120fb9d87dafd49ffe5d92df6d657f960c82c4499d1133bf0
+assets/pickups/formula-reset/hud.png RGBA (64, 64) alpha=(0, 255) sha256=28bef03ff40ce9358b12eef9efcb75ef6eaf42b527839b4a9c3d066bf60b6b1f
+assets/pickups/energy/collectible.png RGBA (128, 128) alpha=(0, 255) sha256=122753a287483f1feb011780a3eb8cfa2d2dfa0a317633f1d064efa162fe6da2
+assets/pickups/energy/hud.png RGBA (64, 64) alpha=(0, 255) sha256=a809c6b23bc6edd16a444373516667fa8ed1dc8a4a6ba1af9e7c7666ec03be07
+assets/pickups/relocate/collectible.png RGBA (128, 128) alpha=(0, 255) sha256=9cc49fa06577e633eea284d573ae934ab415da882b92b877e9fd7176fe9fb9c7
+assets/pickups/relocate/hud.png RGBA (64, 64) alpha=(0, 255) sha256=4e8325e060e235cb0a1bf56c6c91d771859c0164e3b0c41c7cc3dea0008f062f
+assets/nests/lucky-nest/crack-overlay.png RGBA (128, 128) alpha=(0, 255) sha256=cf6629786f860ee38d989d802d35b4e0e38461e1cb5962bf6c936555bbdda90e
+assets/nests/lucky-nest/shell-fragment.png RGBA (128, 128) alpha=(0, 255) sha256=16dc260657f9f3eb5aa5f30b9ab9b27cf4fd6507717ddfe066218c7fb6e02ac3
+Offline dimensions, file existence and PNG decode checked. Runtime NOT RUN.

@@ -1,0 +1,8 @@
+assets/ui/panel-wood.png RGBA (192, 128) alpha=(0, 255) sha256=aaad2119b385c8c8a3fd517ace4c2c116de2151fc34408ede3422a21ac0129e9
+assets/ui/button-primary.png RGBA (192, 80) alpha=(0, 255) sha256=325f324dd8bf7c53e728584964252a5bb60bfc3d09436a8a1099398db618eeda
+assets/ui/button-secondary.png RGBA (192, 80) alpha=(0, 255) sha256=1aaec1dfa072eb2c7ca94e9170d7bd6e48b6deee6848e8694ba7df58820d6ea2
+assets/ui/button-disabled.png RGBA (192, 80) alpha=(0, 255) sha256=96ef5067adba3eb7695a20bf798c9239f0b6f4d3d06d9156ebf94f3061d41211
+assets/ui/tooltip.png RGBA (192, 80) alpha=(0, 255) sha256=a34ee99293b155e8c97d4fa4ad854ee6e194c894eecf48f54a2b696a24c411b1
+assets/ui/bar-frame.png RGBA (192, 48) alpha=(0, 255) sha256=6fab9acb5d88143f5096c98d84b783fbf4f88c2331b5afd869b1875b1924e6ab
+assets/ui/heart.png RGBA (128, 128) alpha=(0, 255) sha256=5b293820e5131dda7faf72c782dfe1ccecf1524a3eebe5f270016c040d28edd7
+Offline dimensions, file existence and PNG decode checked. Runtime NOT RUN.

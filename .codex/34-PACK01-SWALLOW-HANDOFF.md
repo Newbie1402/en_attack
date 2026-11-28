@@ -34,7 +34,7 @@ The handoff specifies these intended runtime paths:
 
 Each pose is intended to be an independent 256×256 RGBA image; `poses.png` is an exact 4×1 sheet at 1024×256, with zero margin and spacing. Portrait is a derived 192×192 idle thumbnail. The original frame grid is 4×3. The estimated common ground anchor is `x=0.46875`, `y=0.921875`; all poses face right.
 
-Current classification from the art handoff: `Runtime Candidate v1`, `needs-revision`, and not production final. The repository received the contact-sheet evidence only; the individual PNG files and sprite sheets are not present in this checkout. Therefore the existing SVG runtime fallback remains authoritative until the actual files are transferred and validated.
+Current classification from the art handoff: `Runtime Candidate v1`, `needs-revision`, and not production final. The complete v1.1 bundle now contains the individual PNG files and 4×1 pose sheets in the intended runtime paths. They are integrated with an SVG fallback and have passed file, type, unit, browser, and build checks; visual art approval, licensing review, and long-session profiling remain open.
 
 ## Animation contract
 
@@ -69,7 +69,7 @@ Do not create a second game loop. Reduced motion may disable decorative tweening
 
 ## QA and rejection gate
 
-Reject any file with clipped wings, conspicuous halos, inconsistent hats, foot jumping, unreadable variants at tile size, oversized padding, duplicate snowballs, stale animation after pause/restart, or unintended changes to trajectory or damage. Browser QA was not included in the art handoff.
+Reject any file with clipped wings, conspicuous halos, inconsistent hats, foot jumping, unreadable variants at tile size, oversized padding, duplicate snowballs, stale animation after pause/restart, or unintended changes to trajectory or damage. Browser QA was not included in the art handoff; repository integration now has browser coverage for authored swallow, enemy, terrain, and UI visibility through the existing Playwright flows.
 
 Required evidence once the PNGs are available:
 
@@ -82,7 +82,7 @@ Required evidence once the PNGs are available:
 - actual lint, typecheck, unit, E2E, and production-build results;
 - observed jitter, rejected assets, performance notes, and rights review.
 
-Do not mark the pack production-ready until those checks pass.
+Do not mark the pack production-ready until the remaining visual approval, rights review, and performance checks pass.
 
 ## Next packs
 

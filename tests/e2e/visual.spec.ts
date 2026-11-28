@@ -1,6 +1,12 @@
 import { expect, test } from '@playwright/test';
 
 test('winter battlefield keeps the game viewport and local assets visible', async ({ page }) => {
+  const failedAssets: string[] = [];
+  page.on('response', (response) => {
+    if (response.url().includes('/assets/') && response.status() >= 400) {
+      failedAssets.push(`${response.status()} ${response.url()}`);
+    }
+  });
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/play/L4');
   await expect(page.locator('.game-hud')).toBeVisible();
@@ -11,6 +17,7 @@ test('winter battlefield keeps the game viewport and local assets visible', asyn
   await expect(page.getByLabel('Đường bay y = f(x)')).toHaveValue('x^2');
   await expect(page.locator('canvas')).toHaveCount(1);
   expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBe(900);
+  expect(failedAssets).toEqual([]);
   await page.screenshot({
     path: 'artifacts/visual-qa/v3-after/responsive/winter-1440x900.png',
     fullPage: false,

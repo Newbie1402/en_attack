@@ -1,0 +1,180 @@
+{
+  "schemaVersion": 1,
+  "packId": "snowgraph-pack05-projectiles-and-combat-vfx-v1",
+  "purpose": "Merge proposal: map existing runtime IDs; do not overwrite unrelated entries",
+  "assets": [
+    {
+      "id": "snowball-normal",
+      "kind": "image",
+      "file": "assets/projectiles/snowball-normal/sprite.png",
+      "width": 128,
+      "height": 128,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "approved-concept-masked-crop",
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "variant": "normal"
+    },
+    {
+      "id": "snowball-frost",
+      "kind": "image",
+      "file": "assets/projectiles/snowball-frost/sprite.png",
+      "width": 128,
+      "height": 128,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "approved-concept-masked-crop",
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "variant": "frost"
+    },
+    {
+      "id": "snowball-heavy",
+      "kind": "image",
+      "file": "assets/projectiles/snowball-heavy/sprite.png",
+      "width": 128,
+      "height": 128,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "approved-concept-masked-crop",
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "variant": "heavy"
+    },
+    {
+      "id": "vfx-hit",
+      "kind": "spritesheet",
+      "file": "assets/effects/hit/frames.png",
+      "width": 1536,
+      "height": 256,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "procedural-vfx",
+      "frameWidth": 256,
+      "frameHeight": 256,
+      "frameCount": 6,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "fps": 20,
+      "loop": false
+    },
+    {
+      "id": "vfx-freeze",
+      "kind": "spritesheet",
+      "file": "assets/effects/freeze/frames.png",
+      "width": 1536,
+      "height": 256,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "procedural-vfx",
+      "frameWidth": 256,
+      "frameHeight": 256,
+      "frameCount": 6,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "fps": 20,
+      "loop": false
+    },
+    {
+      "id": "vfx-armor-break",
+      "kind": "spritesheet",
+      "file": "assets/effects/armor-break/frames.png",
+      "width": 1536,
+      "height": 256,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "procedural-vfx",
+      "frameWidth": 256,
+      "frameHeight": 256,
+      "frameCount": 6,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "fps": 20,
+      "loop": false
+    },
+    {
+      "id": "vfx-shield",
+      "kind": "spritesheet",
+      "file": "assets/effects/shield/frames.png",
+      "width": 1536,
+      "height": 256,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "procedural-vfx",
+      "frameWidth": 256,
+      "frameHeight": 256,
+      "frameCount": 6,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "fps": 20,
+      "loop": false
+    },
+    {
+      "id": "vfx-defeat",
+      "kind": "spritesheet",
+      "file": "assets/effects/defeat/frames.png",
+      "width": 1536,
+      "height": 256,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "procedural-vfx",
+      "frameWidth": 256,
+      "frameHeight": 256,
+      "frameCount": 6,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "fps": 20,
+      "loop": false
+    },
+    {
+      "id": "vfx-pickup-sparkle",
+      "kind": "spritesheet",
+      "file": "assets/effects/pickup-sparkle/frames.png",
+      "width": 1536,
+      "height": 256,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "procedural-vfx",
+      "frameWidth": 256,
+      "frameHeight": 256,
+      "frameCount": 6,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "fps": 20,
+      "loop": false
+    },
+    {
+      "id": "vfx-snow-particle",
+      "kind": "image",
+      "file": "assets/effects/trails/snow-particle.png",
+      "width": 64,
+      "height": 64,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "procedural-vfx",
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  ]
+}

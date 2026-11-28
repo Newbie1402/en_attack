@@ -74,7 +74,17 @@ class BattlefieldScene extends Phaser.Scene {
 
   private readonly collectingPickups = new Map<string, Phaser.GameObjects.Image>();
 
+  private readonly terrainSprites = new Map<string, Phaser.GameObjects.Image>();
+
+  private readonly effectSprites = new Set<Phaser.GameObjects.Sprite>();
+
+  private readonly unitFrames = new Map<string, number>();
+
   private environmentSprite: Phaser.GameObjects.Image | null = null;
+
+  private scenicStripSprite: Phaser.GameObjects.Image | null = null;
+
+  private musicStarted = false;
 
   public constructor() {
     super('battlefield-scene');
@@ -90,18 +100,39 @@ class BattlefieldScene extends Phaser.Scene {
 
   public preload(): void {
     for (const asset of runtimeAssetManifest) {
-      this.load.svg(asset.key, asset.file, { width: asset.width, height: asset.height });
+      if (asset.kind === 'svg') {
+        this.load.svg(asset.key, asset.file, { width: asset.width, height: asset.height });
+      } else if (asset.kind === 'spritesheet') {
+        this.load.spritesheet(asset.key, asset.file, {
+          frameWidth: asset.frameWidth ?? asset.width,
+          frameHeight: asset.frameHeight ?? asset.height,
+        });
+      } else if (asset.kind === 'audio') {
+        this.load.audio(asset.key, asset.file);
+      } else {
+        this.load.image(asset.key, asset.file);
+      }
     }
   }
 
   public create(): void {
     if (this.session === null) return;
+    this.createAssetAnimations();
     this.graphics = this.add.graphics();
     this.environmentSprite = this.add
-      .image(0, 0, this.theme === 'winter' ? 'environment-winter' : 'environment-spring')
+      .image(
+        0,
+        0,
+        this.theme === 'winter' ? 'environment-winter-fallback' : 'environment-spring-fallback',
+      )
       .setOrigin(0, 0)
       .setDepth(-2)
       .setAlpha(0.58);
+    this.scenicStripSprite = this.add
+      .image(0, 0, this.theme === 'winter' ? 'scenic-winter' : 'scenic-spring')
+      .setOrigin(0, 0)
+      .setDepth(-1)
+      .setAlpha(0.82);
     this.title = this.add.text(24, 18, 'Vườn xuân · đường bay thực', {
       color: '#26354d',
       fontFamily: 'Georgia, serif',
@@ -133,8 +164,16 @@ class BattlefieldScene extends Phaser.Scene {
     this.destroySprites(this.pickupSprites);
     this.destroySprites(this.projectileSprites);
     this.destroySprites(this.collectingPickups);
+    this.destroySprites(this.terrainSprites);
+    for (const sprite of this.effectSprites) sprite.destroy();
+    this.effectSprites.clear();
+    this.unitFrames.clear();
     this.environmentSprite?.destroy();
     this.environmentSprite = null;
+    this.scenicStripSprite?.destroy();
+    this.scenicStripSprite = null;
+    this.sound.stopByKey('audio-music-garden');
+    this.musicStarted = false;
     this.placementGhost?.destroy();
     this.placementGhost = null;
   }
@@ -151,6 +190,7 @@ class BattlefieldScene extends Phaser.Scene {
   }
 
   private handlePointerDown(pointer: Phaser.Input.Pointer): void {
+    this.startMusic();
     const state = this.state;
     const session = this.session;
     if (state === null || session === null) return;
@@ -207,6 +247,9 @@ class BattlefieldScene extends Phaser.Scene {
     const height = this.scale.height;
     const layout = this.createLayout();
     this.environmentSprite?.setPosition(0, 0).setDisplaySize(width, height);
+    this.scenicStripSprite
+      ?.setPosition(0, Math.max(0, layout.boardTop - layout.cellPx * 1.2))
+      .setDisplaySize(width, Math.max(80, layout.cellPx * 1.05));
     graphics.clear();
 
     graphics.fillStyle(this.theme === 'winter' ? 0xc9e1e5 : 0xc7dfaa, 1);
@@ -263,6 +306,7 @@ class BattlefieldScene extends Phaser.Scene {
         }
       }
     }
+    this.syncTerrainSprites(state, layout);
     graphics.lineStyle(1, this.theme === 'winter' ? 0xf2fbf5 : 0xeff4d8, 0.22);
     for (let col = 0; col <= state.board.columns; col += 1) {
       graphics.lineBetween(
@@ -322,6 +366,8 @@ class BattlefieldScene extends Phaser.Scene {
       if (event.type === 'shotFired') {
         const sprite = this.unitSprites.get(event.unitId);
         if (sprite !== undefined) {
+          this.unitFrames.set(event.unitId, 2);
+          if (sprite.texture.key.includes('-poses')) sprite.setFrame(2);
           this.tweens.add({
             targets: sprite,
             scaleX: 0.88,
@@ -330,7 +376,22 @@ class BattlefieldScene extends Phaser.Scene {
             yoyo: true,
             ease: 'Sine.easeOut',
           });
+          this.time.delayedCall(110, () => {
+            const current = this.unitSprites.get(event.unitId);
+            if (current !== undefined && current.texture.key.includes('-poses')) {
+              this.unitFrames.set(event.unitId, 3);
+              current.setFrame(3);
+            }
+          });
+          this.time.delayedCall(240, () => {
+            const current = this.unitSprites.get(event.unitId);
+            if (current !== undefined && current.texture.key.includes('-poses')) {
+              this.unitFrames.set(event.unitId, 0);
+              current.setFrame(0);
+            }
+          });
         }
+        this.playSound('audio-sfx-throw');
       }
       if (event.type === 'hit') {
         const sprite = this.enemySprites.get(event.enemyId);
@@ -375,11 +436,77 @@ class BattlefieldScene extends Phaser.Scene {
               ease: 'Quad.easeOut',
               onComplete: () => label.destroy(),
             });
+            this.playEffectAt(
+              event.blocked ? 'vfx-shield' : 'vfx-hit',
+              point,
+              layout.cellPx * 0.52,
+            );
           }
         }
+        this.playSound(event.blocked ? 'audio-sfx-armor-break' : 'audio-sfx-impact');
       }
-      if (event.type === 'pickupCollected') this.animatePickupCollection(event.pickupId);
+      if (event.type === 'pickupCollected') {
+        this.animatePickupCollection(event.pickupId);
+        this.playSound('audio-sfx-pickup');
+      }
+      if (event.type === 'skillActivated') {
+        this.playSound(event.skill === 'freeze' ? 'audio-sfx-freeze' : 'audio-sfx-select');
+      }
+      if (event.type === 'enemyDefeated') this.playSound('audio-sfx-defeat');
+      if (event.type === 'matchEnded') {
+        this.playSound(event.result === 'won' ? 'audio-sfx-victory' : 'audio-sfx-defeat');
+      }
     }
+  }
+
+  private createAssetAnimations(): void {
+    for (const key of [
+      'vfx-hit',
+      'vfx-freeze',
+      'vfx-armor-break',
+      'vfx-shield',
+      'vfx-defeat',
+      'vfx-pickup-sparkle',
+    ]) {
+      if (!this.textures.exists(key) || this.anims.exists(key)) continue;
+      this.anims.create({
+        key,
+        frames: this.anims.generateFrameNumbers(key, { start: 0, end: 5 }),
+        frameRate: 20,
+        repeat: 0,
+      });
+    }
+  }
+
+  private playSound(key: string): void {
+    if (this.sound.locked || !this.cache.audio.exists(key)) return;
+    this.sound.play(key, { volume: 0.28 });
+  }
+
+  private startMusic(): void {
+    if (this.musicStarted || this.sound.locked || !this.cache.audio.exists('audio-music-garden')) {
+      return;
+    }
+    this.sound.play('audio-music-garden', { loop: true, volume: 0.1 });
+    this.musicStarted = true;
+  }
+
+  private playEffectAt(
+    key: string,
+    point: { readonly x: number; readonly y: number },
+    size: number,
+  ): void {
+    if (!this.anims.exists(key)) return;
+    const effect = this.add
+      .sprite(point.x, point.y, key, 0)
+      .setDepth(15)
+      .setDisplaySize(size, size);
+    this.effectSprites.add(effect);
+    effect.play(key);
+    this.time.delayedCall(360, () => {
+      effect.destroy();
+      this.effectSprites.delete(effect);
+    });
   }
 
   private animatePickupCollection(pickupId: string): void {
@@ -505,12 +632,10 @@ class BattlefieldScene extends Phaser.Scene {
       this.placementGhost?.setVisible(false);
       return;
     }
-    const key =
-      interaction.placementKind === 'nest'
-        ? 'nest-lucky'
-        : interaction.placementKind === 'snow'
-          ? 'swallow-normal'
-          : `swallow-${interaction.placementKind}`;
+    const authoredKey = this.unitAssetKey(interaction.placementKind);
+    const key = this.textures.exists(authoredKey)
+      ? authoredKey
+      : this.unitFallbackKey(interaction.placementKind);
     if (this.placementGhost === null) {
       this.placementGhost = this.add.image(0, 0, key).setOrigin(0.5).setDepth(5);
     }
@@ -519,7 +644,7 @@ class BattlefieldScene extends Phaser.Scene {
     this.placementGhost
       .setVisible(true)
       .setPosition(center.x, center.y)
-      .setDisplaySize(layout.cellPx * 0.7, layout.cellPx * 0.56)
+      .setDisplaySize(layout.cellPx * 0.7, layout.cellPx * 0.7)
       .setAlpha(0.58);
   }
 
@@ -530,24 +655,27 @@ class BattlefieldScene extends Phaser.Scene {
     const active = new Set<string>();
     for (const unit of state.units) {
       active.add(unit.id);
-      const key =
-        unit.kind === 'nest'
-          ? 'nest-lucky'
-          : unit.kind === 'snow'
-            ? 'swallow-normal'
-            : `swallow-${unit.kind}`;
+      const authoredKey = this.unitAssetKey(unit.kind);
+      const key = this.textures.exists(authoredKey) ? authoredKey : this.unitFallbackKey(unit.kind);
+      const authored = key === authoredKey;
       let sprite = this.unitSprites.get(unit.id);
       if (sprite === undefined) {
-        sprite = this.add.image(0, 0, key).setOrigin(0.5).setDepth(7);
+        sprite = this.add
+          .image(0, 0, key)
+          .setOrigin(authored ? 0.5 : 0.5, authored ? 0.92 : 0.5)
+          .setDepth(7);
         this.unitSprites.set(unit.id, sprite);
       }
       if (sprite.texture.key !== key) sprite.setTexture(key);
+      if (authored && sprite.texture.key.includes('-poses')) {
+        sprite.setFrame(this.unitFrames.get(unit.id) ?? 0);
+      }
       const center = worldToScreen(cellCenter(unit.cell), state.board, layout);
       const bob =
         unit.kind === 'nest' ? Math.sin(state.tick / 18) * 1.5 : Math.sin(state.tick / 8) * 2.5;
-      const width = layout.cellPx * (unit.kind === 'heavy' ? 0.78 : 0.7);
-      sprite.setPosition(center.x, center.y + bob);
-      sprite.setDisplaySize(width, width * 0.8);
+      const width = layout.cellPx * (unit.kind === 'heavy' ? 0.86 : 0.78);
+      sprite.setPosition(center.x, center.y + bob + (authored ? layout.cellPx * 0.24 : 0));
+      sprite.setDisplaySize(width, authored ? width : width * 0.8);
       sprite.setAlpha(
         unit.attackState === 'COOLDOWN' ? 0.74 : unit.assignedFormula === null ? 0.84 : 1,
       );
@@ -567,18 +695,25 @@ class BattlefieldScene extends Phaser.Scene {
     const active = new Set<string>();
     for (const enemy of state.enemies) {
       active.add(enemy.id);
-      const key = `enemy-${enemy.kind}`;
+      const authoredKey = this.enemyAssetKey(enemy.kind);
+      const key = this.textures.exists(authoredKey) ? authoredKey : `enemy-${enemy.kind}-fallback`;
+      const authored = key === authoredKey;
       let sprite = this.enemySprites.get(enemy.id);
       if (sprite === undefined) {
-        sprite = this.add.image(0, 0, key).setOrigin(0.5).setDepth(6);
+        sprite = this.add
+          .image(0, 0, key)
+          .setOrigin(0.5, authored ? 0.92 : 0.5)
+          .setDepth(6);
         this.enemySprites.set(enemy.id, sprite);
       }
       if (sprite.texture.key !== key) sprite.setTexture(key);
       const center = worldToScreen(enemy.position, state.board, layout);
-      const size = layout.cellPx * (enemy.kind === 'guardian' ? 1.06 : enemy.radius * 2.35);
+      const size = authored
+        ? layout.cellPx * (enemy.kind === 'guardian' ? 1.06 : 0.82)
+        : layout.cellPx * (enemy.kind === 'guardian' ? 1.06 : enemy.radius * 2.35);
       const bob = enemy.kind === 'raven' ? Math.sin(state.tick / 7 + enemy.position.x) * 4 : 0;
-      sprite.setPosition(center.x, center.y + bob);
-      sprite.setDisplaySize(size, size * 0.88);
+      sprite.setPosition(center.x, center.y + bob + (authored ? layout.cellPx * 0.2 : 0));
+      sprite.setDisplaySize(size, authored ? size : size * 0.88);
       sprite.setRotation(enemy.kind === 'raven' ? Math.sin(state.tick / 9) * 0.06 : 0);
     }
     this.removeInactiveSprites(this.enemySprites, active);
@@ -591,7 +726,12 @@ class BattlefieldScene extends Phaser.Scene {
     const active = new Set<string>();
     for (const pickup of state.pickups) {
       active.add(pickup.id);
-      const key = pickup.kind === 'energy' ? 'pickup-energy' : 'pickup-skill';
+      const pickupKey = pickup.kind === 'energy' ? 'energy' : this.pickupSkillKey(pickup.skill);
+      const authoredKey = `pickup-${pickupKey}-authored`;
+      const key = this.textures.exists(authoredKey)
+        ? authoredKey
+        : this.unitPickupFallbackKey(pickup.kind);
+      const authored = key === authoredKey;
       let sprite = this.pickupSprites.get(pickup.id);
       if (sprite === undefined) {
         sprite = this.add.image(0, 0, key).setOrigin(0.5).setDepth(9);
@@ -602,7 +742,8 @@ class BattlefieldScene extends Phaser.Scene {
       const ready = state.tick >= pickup.collectibleTick;
       const pulse = ready ? 1 + Math.sin(state.tick / 10) * 0.08 : 0.9;
       sprite.setPosition(center.x, center.y - Math.sin(state.tick / 9) * 3);
-      sprite.setDisplaySize(layout.cellPx * 0.34 * pulse, layout.cellPx * 0.34 * pulse);
+      const size = layout.cellPx * (authored ? 0.42 : 0.34) * pulse;
+      sprite.setDisplaySize(size, size);
       sprite.setAlpha(ready ? 1 : 0.62);
       sprite.setRotation(ready ? state.tick / 90 : 0);
     }
@@ -616,11 +757,16 @@ class BattlefieldScene extends Phaser.Scene {
     const active = new Set<string>();
     for (const projectile of state.projectiles) {
       active.add(projectile.id);
+      const unit = state.units.find((current) => current.id === projectile.unitId);
+      const kind = unit?.kind === 'frost' ? 'frost' : unit?.kind === 'heavy' ? 'heavy' : 'normal';
+      const authoredKey = `projectile-snowball-${kind}`;
+      const key = this.textures.exists(authoredKey) ? authoredKey : 'projectile-snowball-fallback';
       let sprite = this.projectileSprites.get(projectile.id);
       if (sprite === undefined) {
-        sprite = this.add.image(0, 0, 'projectile-snowball').setOrigin(0.5).setDepth(10);
+        sprite = this.add.image(0, 0, key).setOrigin(0.5).setDepth(10);
         this.projectileSprites.set(projectile.id, sprite);
       }
+      if (sprite.texture.key !== key) sprite.setTexture(key);
       const local = this.pathPointAtProgress(projectile.path, projectile.progressX);
       if (local === null) continue;
       const point = worldToScreen(
@@ -727,6 +873,56 @@ class BattlefieldScene extends Phaser.Scene {
       graphics.fillStyle(0xffffff, 0.62);
       graphics.fillCircle(point.x - layout.cellPx * 0.34, point.y, 3);
     }
+  }
+
+  private syncTerrainSprites(
+    state: SimulationState,
+    layout: ReturnType<typeof createScreenLayout>,
+  ): void {
+    const active = new Set<string>();
+    for (let row = 0; row < state.board.rows; row += 1) {
+      for (let col = 0; col < state.board.columns; col += 1) {
+        const id = `${col}:${row}`;
+        active.add(id);
+        const variant = ((col * 17 + row * 29) % 6) + 1;
+        const key = `tile-${this.theme}-${variant}`;
+        if (!this.textures.exists(key)) continue;
+        let sprite = this.terrainSprites.get(id);
+        if (sprite === undefined) {
+          sprite = this.add.image(0, 0, key).setOrigin(0.5).setDepth(0.5);
+          this.terrainSprites.set(id, sprite);
+        }
+        if (sprite.texture.key !== key) sprite.setTexture(key);
+        const center = worldToScreen({ x: col + 0.5, y: row + 0.5 }, state.board, layout);
+        sprite.setPosition(center.x, center.y).setDisplaySize(layout.cellPx - 2, layout.cellPx - 2);
+      }
+    }
+    this.removeInactiveSprites(this.terrainSprites, active);
+  }
+
+  private unitAssetKey(kind: UnitKind): string {
+    if (kind === 'nest') return 'nest-lucky-authored';
+    return `swallow-${kind === 'snow' ? 'normal' : kind}-poses`;
+  }
+
+  private unitFallbackKey(kind: UnitKind): string {
+    if (kind === 'nest') return 'nest-lucky-fallback';
+    return `swallow-${kind === 'snow' ? 'normal' : kind}-fallback`;
+  }
+
+  private enemyAssetKey(kind: EnemyState['kind']): string {
+    const authoredKind = kind === 'boar' ? 'boar' : kind === 'turtle' ? 'turtle' : kind;
+    return `enemy-${authoredKind}-authored`;
+  }
+
+  private pickupSkillKey(skill: SimulationState['pickups'][number]['skill']): string {
+    if (skill === 'doubleDamage') return 'damage';
+    if (skill === 'formulaReset') return 'reset';
+    return skill ?? 'skill';
+  }
+
+  private unitPickupFallbackKey(kind: SimulationState['pickups'][number]['kind']): string {
+    return kind === 'energy' ? 'pickup-energy-fallback' : 'pickup-skill-fallback';
   }
 
   private removeInactiveSprites(

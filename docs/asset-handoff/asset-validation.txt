@@ -1,0 +1,19 @@
+normal/idle.png | RGBA (256, 256) | alpha (0, 255) | bounds (26, 41, 213, 239) | SHA256 2ad4861284448fad03c2c372610e965c022d3b039b03fcf5efcbf43aba3b6540 | PASS
+normal/charge.png | RGBA (256, 256) | alpha (0, 255) | bounds (37, 48, 208, 239) | SHA256 bdb74d20e4409600399f5a5caf06c557d7fde47e24f0832098cb34dac9094367 | PASS
+normal/release.png | RGBA (256, 256) | alpha (0, 255) | bounds (46, 42, 246, 239) | SHA256 fa79977b3e7021d2af0c917794cee22cf6bc7a877db49c23cb74eee627b2b02c | PASS
+normal/recovery.png | RGBA (256, 256) | alpha (0, 255) | bounds (38, 47, 203, 239) | SHA256 f5fb4cc8ca9702e21da0af2c54b60f85120f2e8bce2a66fd5a7ab123381ae76c | PASS
+normal/poses.png | RGBA (1024, 256) | alpha (0, 255) | bounds (26, 41, 971, 239) | SHA256 764333e7204af987bf7460e51ddb59da32ecc1420a164154bd6301384182e1af | PASS
+normal/portrait.png | RGBA (192, 192) | alpha (0, 255) | bounds (19, 30, 161, 180) | SHA256 d58a829f2a45b9a3368c6b7ab5db0fabbb73402335ae761e45ecf71caa865e33 | PASS
+frost/idle.png | RGBA (256, 256) | alpha (0, 255) | bounds (29, 39, 211, 239) | SHA256 705a7c555ac6b8d5f149f29cf93dcc23e85aea0307fbc87c57186ac0b7542d1f | PASS
+frost/charge.png | RGBA (256, 256) | alpha (0, 255) | bounds (35, 44, 204, 239) | SHA256 760ca5353754267f971f9ca61834546468cb1ffd278a2629c75603156088bd2a | PASS
+frost/release.png | RGBA (256, 256) | alpha (0, 255) | bounds (43, 39, 247, 239) | SHA256 86fa3386b7b93f62988fc0b8ddefd446cb4577649a4e6988ec29275679d0ff03 | PASS
+frost/recovery.png | RGBA (256, 256) | alpha (0, 255) | bounds (36, 47, 201, 239) | SHA256 396a4d546dd8c13a099a2277bef56fb71e436f8e2062282cd213fd254ebf9570 | PASS
+frost/poses.png | RGBA (1024, 256) | alpha (0, 255) | bounds (29, 39, 969, 239) | SHA256 838e712b76fdc3a4ff7a1bff5d14476c3987297e1c65823e092d11f73b56d6f5 | PASS
+frost/portrait.png | RGBA (192, 192) | alpha (0, 255) | bounds (21, 28, 159, 179) | SHA256 01161cf4051b48f337064a7ea6f7910c4daaa54cfe1887062b9a8ae9b3b1370a | PASS
+heavy/idle.png | RGBA (256, 256) | alpha (0, 255) | bounds (22, 31, 208, 239) | SHA256 189d6e5ecdf8dbe5f9f3ee5e0263c497efe2d54319693631dab7031a33c99d35 | PASS
+heavy/charge.png | RGBA (256, 256) | alpha (0, 255) | bounds (21, 38, 212, 239) | SHA256 334a404584e28fdb9060a3909b1073d5e2a386e2808c0c7283d73d738b9d8882 | PASS
+heavy/release.png | RGBA (256, 256) | alpha (0, 255) | bounds (30, 31, 244, 239) | SHA256 c78242cb6dcaef6d173cdff70bc983f41e3bba5bbc5732feae73655acbccadf3 | PASS
+heavy/recovery.png | RGBA (256, 256) | alpha (0, 255) | bounds (29, 38, 210, 239) | SHA256 1fe8bb0af8454aece36326f1b7b9300dc4b9f07d8eade5cde487b5e5ab197ebf | PASS
+heavy/poses.png | RGBA (1024, 256) | alpha (0, 255) | bounds (22, 31, 978, 239) | SHA256 f2dd74230d89ebeb0ae16ba1581424e492129c38d1c60967ebb51976a95ab511 | PASS
+heavy/portrait.png | RGBA (192, 192) | alpha (0, 255) | bounds (16, 23, 157, 180) | SHA256 8276f337b6e13d4361775ec2ebc86af2279e60ef849b2373d500004644ff45c1 | PASS
+Anchor from existing handoff: (120/256,236/256); all raw alpha bottoms = 239 (includes antialias fringe); precise foot alignment in motion NOT verified. All 12 atlas crops byte-identical to standalone RGBA frames. Phaser/browser NOT RUN.

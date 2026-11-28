@@ -1,0 +1,202 @@
+{
+  "schemaVersion": 1,
+  "packId": "snowgraph-pack01-swallows-v1",
+  "purpose": "patch proposal; map to existing runtime manifest, do not overwrite it",
+  "assets": [
+    {
+      "id": "swallow-normal-poses",
+      "variant": "normal",
+      "kind": "spritesheet",
+      "file": "assets/characters/swallows/normal/poses.png",
+      "width": 1024,
+      "height": 256,
+      "frameWidth": 256,
+      "frameHeight": 256,
+      "frameCount": 4,
+      "anchor": {
+        "x": 0.46875,
+        "y": 0.921875
+      },
+      "facing": "right",
+      "frames": {
+        "idle": 0,
+        "charge": 1,
+        "release": 2,
+        "recovery": 3
+      },
+      "displayHeightInTiles": 1.02,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "generated-and-alpha-cleaned",
+      "licenseNote": "Generated illustration based on owner-provided mascot reference; confirm brand/art permissions before public release.",
+      "portrait": {
+        "file": "assets/characters/swallows/normal/portrait.png",
+        "width": 192,
+        "height": 192,
+        "derivedFrom": "idle"
+      },
+      "clips": {
+        "idle": {
+          "frames": [0],
+          "fps": 1,
+          "loop": true,
+          "method": "pose+tween"
+        },
+        "charge": {
+          "frames": [1],
+          "fps": 1,
+          "loop": false,
+          "method": "hold until simulation release"
+        },
+        "release": {
+          "frames": [2],
+          "fps": 1,
+          "loop": false,
+          "durationMs": 100
+        },
+        "recovery": {
+          "frames": [3],
+          "fps": 1,
+          "loop": false,
+          "durationMs": 140
+        },
+        "victory": {
+          "frames": [3],
+          "fps": 1,
+          "loop": true,
+          "method": "pose+tween"
+        }
+      }
+    },
+    {
+      "id": "swallow-frost-poses",
+      "variant": "frost",
+      "kind": "spritesheet",
+      "file": "assets/characters/swallows/frost/poses.png",
+      "width": 1024,
+      "height": 256,
+      "frameWidth": 256,
+      "frameHeight": 256,
+      "frameCount": 4,
+      "anchor": {
+        "x": 0.46875,
+        "y": 0.921875
+      },
+      "facing": "right",
+      "frames": {
+        "idle": 0,
+        "charge": 1,
+        "release": 2,
+        "recovery": 3
+      },
+      "displayHeightInTiles": 1.02,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "generated-and-alpha-cleaned",
+      "licenseNote": "Generated illustration based on owner-provided mascot reference; confirm brand/art permissions before public release.",
+      "portrait": {
+        "file": "assets/characters/swallows/frost/portrait.png",
+        "width": 192,
+        "height": 192,
+        "derivedFrom": "idle"
+      },
+      "clips": {
+        "idle": {
+          "frames": [0],
+          "fps": 1,
+          "loop": true,
+          "method": "pose+tween"
+        },
+        "charge": {
+          "frames": [1],
+          "fps": 1,
+          "loop": false,
+          "method": "hold until simulation release"
+        },
+        "release": {
+          "frames": [2],
+          "fps": 1,
+          "loop": false,
+          "durationMs": 100
+        },
+        "recovery": {
+          "frames": [3],
+          "fps": 1,
+          "loop": false,
+          "durationMs": 140
+        },
+        "victory": {
+          "frames": [3],
+          "fps": 1,
+          "loop": true,
+          "method": "pose+tween"
+        }
+      }
+    },
+    {
+      "id": "swallow-heavy-poses",
+      "variant": "heavy",
+      "kind": "spritesheet",
+      "file": "assets/characters/swallows/heavy/poses.png",
+      "width": 1024,
+      "height": 256,
+      "frameWidth": 256,
+      "frameHeight": 256,
+      "frameCount": 4,
+      "anchor": {
+        "x": 0.46875,
+        "y": 0.921875
+      },
+      "facing": "right",
+      "frames": {
+        "idle": 0,
+        "charge": 1,
+        "release": 2,
+        "recovery": 3
+      },
+      "displayHeightInTiles": 1.02,
+      "status": "needs-revision",
+      "integrationStatus": "runtime-candidate",
+      "source": "generated-and-alpha-cleaned",
+      "licenseNote": "Generated illustration based on owner-provided mascot reference; confirm brand/art permissions before public release.",
+      "portrait": {
+        "file": "assets/characters/swallows/heavy/portrait.png",
+        "width": 192,
+        "height": 192,
+        "derivedFrom": "idle"
+      },
+      "clips": {
+        "idle": {
+          "frames": [0],
+          "fps": 1,
+          "loop": true,
+          "method": "pose+tween"
+        },
+        "charge": {
+          "frames": [1],
+          "fps": 1,
+          "loop": false,
+          "method": "hold until simulation release"
+        },
+        "release": {
+          "frames": [2],
+          "fps": 1,
+          "loop": false,
+          "durationMs": 100
+        },
+        "recovery": {
+          "frames": [3],
+          "fps": 1,
+          "loop": false,
+          "durationMs": 140
+        },
+        "victory": {
+          "frames": [3],
+          "fps": 1,
+          "loop": true,
+          "method": "pose+tween"
+        }
+      }
+    }
+  ]
+}

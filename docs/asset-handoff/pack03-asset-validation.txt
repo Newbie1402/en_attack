@@ -1,0 +1,16 @@
+assets/tilesets/spring/ground-01.png RGBA (128, 128) alpha=(255, 255) sha256=ac51bdcc075f7fead5de186839add362d1c6efbda81109338aa71a54a518fd12
+assets/tilesets/spring/ground-02.png RGBA (128, 128) alpha=(255, 255) sha256=11986f6e89bd7bea3552436b6ffeefa6a03df15d7522f59adc5d7ff563ba936b
+assets/tilesets/spring/ground-03.png RGBA (128, 128) alpha=(255, 255) sha256=75f907e3d89f9c11c8b6114a01a947196002966604b40b89d22f62e1758b8526
+assets/tilesets/spring/ground-04.png RGBA (128, 128) alpha=(255, 255) sha256=d1e70711af1096d312e7d4d1c9f48505866241736aa05bd16a47a38854861d4c
+assets/tilesets/spring/ground-05.png RGBA (128, 128) alpha=(255, 255) sha256=bb9517ff2b3b8e1cb94b82f4736ace0edc50494b31d3dce4dc7872b6e8ae5ef7
+assets/tilesets/spring/ground-06.png RGBA (128, 128) alpha=(255, 255) sha256=8314f15b0c4d7db8fb2eaa760b38277dd446a3e8965981487da3eb6a4f2cbf48
+assets/environments/spring/scenic-strip.png RGBA (1024, 198) alpha=(255, 255) sha256=6828a4974aafe02566c94a58a3513651cf8d616f84d02dc52e7f52f75ba1d7f2
+assets/tilesets/winter/ground-01.png RGBA (128, 128) alpha=(255, 255) sha256=b777b57968561953dedd8dea01320636af624b6e9e226c0d475e1caeea0e2dd5
+assets/tilesets/winter/ground-02.png RGBA (128, 128) alpha=(255, 255) sha256=890ca468637f25f67edf672b30c88ec8280702c13cde046d8e29680c2cb13d42
+assets/tilesets/winter/ground-03.png RGBA (128, 128) alpha=(255, 255) sha256=0751369c4283ca378c40a48d588f420573300ef5011856155815d8d12c206eba
+assets/tilesets/winter/ground-04.png RGBA (128, 128) alpha=(255, 255) sha256=59e95bd80ac2949e83a2dc905aa7c1c3b4e0f5874a52911565552d80044a3344
+assets/tilesets/winter/ground-05.png RGBA (128, 128) alpha=(255, 255) sha256=0751369c4283ca378c40a48d588f420573300ef5011856155815d8d12c206eba
+assets/tilesets/winter/ground-06.png RGBA (128, 128) alpha=(255, 255) sha256=59e95bd80ac2949e83a2dc905aa7c1c3b4e0f5874a52911565552d80044a3344
+assets/environments/winter/scenic-strip.png RGBA (1024, 198) alpha=(255, 255) sha256=ade71060036420d88898d4c3d57c2d1c411163d79a2b2e40ea711f3635b7108d
+assets/props/spring/flower-cluster.png RGBA (64, 64) alpha=(0, 255) sha256=62d425fee36b7c4aae14f32005753d86b3120b2b094fac998a4bdae92b469d86
+Offline dimensions, file existence and PNG decode checked. Runtime NOT RUN.

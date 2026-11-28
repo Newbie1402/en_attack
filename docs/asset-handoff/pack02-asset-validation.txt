@@ -1,0 +1,13 @@
+assets/characters/enemies/fox/idle.png RGBA (256, 256) alpha=(0, 255) sha256=35bcdd4bec717b72c0aabcb28c1930e9896b1cf8c0c58a69f0fe413fa43fe40f
+assets/characters/enemies/fox/portrait.png RGBA (192, 192) alpha=(0, 255) sha256=0c46169e124b263c6b0e0acb3d9e0de059857676d5ba5677e543990ed2eb535a
+assets/characters/enemies/rabbit/idle.png RGBA (256, 256) alpha=(0, 255) sha256=32e12eea83e0f9712a699dfedae087450cfb876dfc65aded1a84da4bea19dcbd
+assets/characters/enemies/rabbit/portrait.png RGBA (192, 192) alpha=(0, 255) sha256=05d6a7dfa8e8bc68b1433c54bf20094a9bc3f80ee93bb8087fd79c89bafc8a1f
+assets/characters/enemies/armored-boar/idle.png RGBA (256, 256) alpha=(0, 255) sha256=ab3e120c290512c4acffd49c91d77641a0f4a558e3b89e2a4ae55f6fdc201a51
+assets/characters/enemies/armored-boar/portrait.png RGBA (192, 192) alpha=(0, 255) sha256=7f0ed8117e4541c79d9f8edf76f58866a199ad0dd1360f714508319c7125dadb
+assets/characters/enemies/crystal-turtle/idle.png RGBA (256, 256) alpha=(0, 255) sha256=2bb59fcd244b7a4cf5425bcae25cac3319074960d5c1403fb81ebe0f02c8b30a
+assets/characters/enemies/crystal-turtle/portrait.png RGBA (192, 192) alpha=(0, 255) sha256=16417a02e126b67b3f9e0584af8c5fbb6e791fbb012745df62ff1b5425a57081
+assets/characters/enemies/raven/idle.png RGBA (256, 256) alpha=(0, 255) sha256=bb1a946bd422afc73b5f9f5da8aa4a381486b733e0a050137dea6e530dccbb52
+assets/characters/enemies/raven/portrait.png RGBA (192, 192) alpha=(0, 255) sha256=9524cceed78ee8eb3b550617516c5c4576209818aa692b58f7c00a3324ebaf4b
+assets/characters/enemies/frost-wolf/idle.png RGBA (256, 256) alpha=(0, 255) sha256=cb8c4bbbfeff2d117206a1bea680e3d82bd6b2a377ad19ccd0a502615b5da323
+assets/characters/enemies/frost-wolf/portrait.png RGBA (192, 192) alpha=(0, 255) sha256=ede78575d00849fb3c1621e2a439ae9489aab9034a7de1d82bad3eee1927eda7
+Offline dimensions, file existence and PNG decode checked. Runtime NOT RUN.
