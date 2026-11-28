@@ -33,6 +33,8 @@ interface BattlefieldSceneData {
   readonly session: GameSession;
   readonly previewStore: PreviewStore;
   readonly theme: 'spring' | 'winter';
+  readonly muted: boolean;
+  readonly reducedMotion: boolean;
   readonly interactionStore: InteractionStore;
 }
 
@@ -57,6 +59,10 @@ class BattlefieldScene extends Phaser.Scene {
   private previewStore: PreviewStore | null = null;
 
   private theme: 'spring' | 'winter' = 'spring';
+
+  private muted = false;
+
+  private reducedMotion = false;
 
   private interactionStore: InteractionStore | null = null;
 
@@ -94,6 +100,8 @@ class BattlefieldScene extends Phaser.Scene {
     this.session = data.session;
     this.previewStore = data.previewStore;
     this.theme = data.theme;
+    this.muted = data.muted;
+    this.reducedMotion = data.reducedMotion;
     this.interactionStore = data.interactionStore;
     this.state = data.session.getState();
   }
@@ -368,14 +376,16 @@ class BattlefieldScene extends Phaser.Scene {
         if (sprite !== undefined) {
           this.unitFrames.set(event.unitId, 2);
           if (sprite.texture.key.includes('-poses')) sprite.setFrame(2);
-          this.tweens.add({
-            targets: sprite,
-            scaleX: 0.88,
-            scaleY: 0.88,
-            duration: 80,
-            yoyo: true,
-            ease: 'Sine.easeOut',
-          });
+          if (!this.reducedMotion) {
+            this.tweens.add({
+              targets: sprite,
+              scaleX: 0.88,
+              scaleY: 0.88,
+              duration: 80,
+              yoyo: true,
+              ease: 'Sine.easeOut',
+            });
+          }
           this.time.delayedCall(110, () => {
             const current = this.unitSprites.get(event.unitId);
             if (current !== undefined && current.texture.key.includes('-poses')) {
@@ -449,10 +459,24 @@ class BattlefieldScene extends Phaser.Scene {
         this.animatePickupCollection(event.pickupId);
         this.playSound('audio-sfx-pickup');
       }
+      if (event.type === 'pickupProduced' && !this.reducedMotion) {
+        this.time.delayedCall(0, () => {
+          const sprite = this.pickupSprites.get(event.pickupId);
+          if (sprite === undefined) return;
+          sprite.setScale(0.35);
+          this.tweens.add({ targets: sprite, scale: 1, duration: 260, ease: 'Back.easeOut' });
+        });
+      }
       if (event.type === 'skillActivated') {
         this.playSound(event.skill === 'freeze' ? 'audio-sfx-freeze' : 'audio-sfx-select');
       }
-      if (event.type === 'enemyDefeated') this.playSound('audio-sfx-defeat');
+      if (event.type === 'enemyDefeated') {
+        const sprite = this.enemySprites.get(event.enemyId);
+        if (sprite !== undefined) {
+          this.playEffectAt('vfx-defeat', { x: sprite.x, y: sprite.y }, 56);
+        }
+        this.playSound('audio-sfx-defeat');
+      }
       if (event.type === 'matchEnded') {
         this.playSound(event.result === 'won' ? 'audio-sfx-victory' : 'audio-sfx-defeat');
       }
@@ -479,12 +503,17 @@ class BattlefieldScene extends Phaser.Scene {
   }
 
   private playSound(key: string): void {
-    if (this.sound.locked || !this.cache.audio.exists(key)) return;
+    if (this.muted || this.sound.locked || !this.cache.audio.exists(key)) return;
     this.sound.play(key, { volume: 0.28 });
   }
 
   private startMusic(): void {
-    if (this.musicStarted || this.sound.locked || !this.cache.audio.exists('audio-music-garden')) {
+    if (
+      this.muted ||
+      this.musicStarted ||
+      this.sound.locked ||
+      !this.cache.audio.exists('audio-music-garden')
+    ) {
       return;
     }
     this.sound.play('audio-music-garden', { loop: true, volume: 0.1 });
@@ -496,7 +525,7 @@ class BattlefieldScene extends Phaser.Scene {
     point: { readonly x: number; readonly y: number },
     size: number,
   ): void {
-    if (!this.anims.exists(key)) return;
+    if (this.reducedMotion || !this.anims.exists(key)) return;
     const effect = this.add
       .sprite(point.x, point.y, key, 0)
       .setDepth(15)
@@ -671,8 +700,11 @@ class BattlefieldScene extends Phaser.Scene {
         sprite.setFrame(this.unitFrames.get(unit.id) ?? 0);
       }
       const center = worldToScreen(cellCenter(unit.cell), state.board, layout);
-      const bob =
-        unit.kind === 'nest' ? Math.sin(state.tick / 18) * 1.5 : Math.sin(state.tick / 8) * 2.5;
+      const bob = this.reducedMotion
+        ? 0
+        : unit.kind === 'nest'
+          ? Math.sin(state.tick / 18) * 1.5
+          : Math.sin(state.tick / 8) * 2.5;
       const width = layout.cellPx * (unit.kind === 'heavy' ? 0.86 : 0.78);
       sprite.setPosition(center.x, center.y + bob + (authored ? layout.cellPx * 0.24 : 0));
       sprite.setDisplaySize(width, authored ? width : width * 0.8);
@@ -711,7 +743,10 @@ class BattlefieldScene extends Phaser.Scene {
       const size = authored
         ? layout.cellPx * (enemy.kind === 'guardian' ? 1.06 : 0.82)
         : layout.cellPx * (enemy.kind === 'guardian' ? 1.06 : enemy.radius * 2.35);
-      const bob = enemy.kind === 'raven' ? Math.sin(state.tick / 7 + enemy.position.x) * 4 : 0;
+      const bob =
+        !this.reducedMotion && enemy.kind === 'raven'
+          ? Math.sin(state.tick / 7 + enemy.position.x) * 4
+          : 0;
       sprite.setPosition(center.x, center.y + bob + (authored ? layout.cellPx * 0.2 : 0));
       sprite.setDisplaySize(size, authored ? size : size * 0.88);
       sprite.setRotation(enemy.kind === 'raven' ? Math.sin(state.tick / 9) * 0.06 : 0);
@@ -741,11 +776,14 @@ class BattlefieldScene extends Phaser.Scene {
       const center = worldToScreen(pickup.position, state.board, layout);
       const ready = state.tick >= pickup.collectibleTick;
       const pulse = ready ? 1 + Math.sin(state.tick / 10) * 0.08 : 0.9;
-      sprite.setPosition(center.x, center.y - Math.sin(state.tick / 9) * 3);
+      sprite.setPosition(
+        center.x,
+        center.y - (this.reducedMotion ? 0 : Math.sin(state.tick / 9) * 3),
+      );
       const size = layout.cellPx * (authored ? 0.42 : 0.34) * pulse;
       sprite.setDisplaySize(size, size);
       sprite.setAlpha(ready ? 1 : 0.62);
-      sprite.setRotation(ready ? state.tick / 90 : 0);
+      sprite.setRotation(ready && !this.reducedMotion ? state.tick / 90 : 0);
     }
     this.removeInactiveSprites(this.pickupSprites, active);
   }
@@ -1110,6 +1148,8 @@ interface PhaserBattlefieldCanvasProps {
   readonly session: GameSession;
   readonly preview: PreviewTrajectory | null;
   readonly theme: 'spring' | 'winter';
+  readonly muted: boolean;
+  readonly reducedMotion: boolean;
   readonly placementKind: UnitKind | null;
   readonly relocationUnitId: string | null;
   readonly onBoardCell: (cell: Cell) => void;
@@ -1120,6 +1160,8 @@ export function PhaserBattlefieldCanvas({
   session,
   preview,
   theme,
+  muted,
+  reducedMotion,
   placementKind,
   relocationUnitId,
   onBoardCell,
@@ -1165,6 +1207,8 @@ export function PhaserBattlefieldCanvas({
       session,
       previewStore: previewStore.current,
       theme,
+      muted,
+      reducedMotion,
       interactionStore: interactionStore.current,
     });
     session.start();
@@ -1172,7 +1216,7 @@ export function PhaserBattlefieldCanvas({
       session.dispose();
       game.destroy(true);
     };
-  }, [session, theme]);
+  }, [muted, reducedMotion, session, theme]);
 
   const handlePlacementPointerDown = (event: PointerEvent<HTMLDivElement>) => {
     if (placementKind === null && relocationUnitId === null) return;
@@ -1210,9 +1254,6 @@ export function PhaserBattlefieldCanvas({
       aria-label="Chiến trường SnowGraph"
       onPointerDownCapture={handlePlacementPointerDown}
       onContextMenuCapture={handleInteractionCancel}
-      onKeyDownCapture={(event) => {
-        if (event.key === 'Escape') handleInteractionCancel(event);
-      }}
       tabIndex={0}
     />
   );

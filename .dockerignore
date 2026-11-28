@@ -1,0 +1,12 @@
+.git
+.github
+.codex
+.idea
+node_modules
+dist
+coverage
+playwright-report
+test-results
+artifacts
+references
+*.tsbuildinfo

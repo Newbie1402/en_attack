@@ -13,6 +13,12 @@ test('campaign, sandbox and settings use real local boundaries', async ({ page }
 
   await page.goto('/settings');
   await page.getByLabel('Tắt âm thanh').check();
+  await page.getByLabel('Giảm chuyển động').check();
+  await page.getByLabel('Hiện gợi ý công thức').uncheck();
   await page.reload();
   await expect(page.getByLabel('Tắt âm thanh')).toBeChecked();
+  await expect(page.getByLabel('Giảm chuyển động')).toBeChecked();
+  await expect(page.getByLabel('Hiện gợi ý công thức')).not.toBeChecked();
+  await page.goto('/play/L1');
+  await expect(page.locator('#formula-help')).toHaveCount(0);
 });

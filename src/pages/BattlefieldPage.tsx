@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
 import { getLevelDefinition } from '../content/levels';
@@ -48,6 +48,7 @@ export function BattlefieldPage(): React.JSX.Element {
   const { levelId = 'L1' } = useParams();
   const level = getLevelDefinition(levelId);
   const session = useMemo(() => new GameSession(level.config), [level.config]);
+  const preferences = useMemo(() => readSave(), []);
   const initialState = session.getState();
   const [state, setState] = useState(initialState);
   const [formula, setFormula] = useState(
@@ -59,6 +60,7 @@ export function BattlefieldPage(): React.JSX.Element {
   const [relocationUnitId, setRelocationUnitId] = useState<string | null>(null);
   const formulaInputRef = useRef<HTMLInputElement>(null);
   const editorUnitRef = useRef<string | null>(initialState.selectedUnitId);
+  const modeRef = useRef(initialState.mode);
   const preview = useMemo<PreviewTrajectory | null>(() => {
     if (!state.previewAllowed) return null;
     const unit =
@@ -84,7 +86,9 @@ export function BattlefieldPage(): React.JSX.Element {
             ?.source ?? '',
         );
       }
-      if (events.length > 0 || nextState.tick % 6 === 0) setState(nextState);
+      const modeChanged = modeRef.current !== nextState.mode;
+      modeRef.current = nextState.mode;
+      if (events.length > 0 || nextState.tick % 6 === 0 || modeChanged) setState(nextState);
       const rejected = events.find((event) => event.type === 'commandRejected');
       if (events.some((event) => event.type === 'matchEnded' && event.result === 'won')) {
         writeSave(markLevelWon(readSave(), levelId));
@@ -153,6 +157,28 @@ export function BattlefieldPage(): React.JSX.Element {
     if (state.mode === 'running') session.dispatch({ type: 'pause' });
     if (state.mode === 'paused') session.dispatch({ type: 'resume' });
   };
+
+  const handleEscape = useCallback(
+    (event: { readonly key: string; preventDefault: () => void }) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      if (placementKind !== null || relocationUnitId !== null) {
+        setPlacementKind(null);
+        setRelocationUnitId(null);
+        return;
+      }
+      const currentMode = session.getState().mode;
+      if (currentMode === 'running') session.dispatch({ type: 'pause' });
+      if (currentMode === 'paused') session.dispatch({ type: 'resume' });
+    },
+    [placementKind, relocationUnitId, session],
+  );
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [handleEscape]);
+
   const resetMatch = () => {
     session.reset();
     setFeedback('');
@@ -209,7 +235,7 @@ export function BattlefieldPage(): React.JSX.Element {
   };
 
   return (
-    <section className={`battlefield-page ${level.theme}`}>
+    <section className={`battlefield-page ${level.theme}`} onKeyDownCapture={handleEscape}>
       <header className="game-hud">
         <div className="level-identity">
           <span className="chapter-mark">01</span>
@@ -336,6 +362,8 @@ export function BattlefieldPage(): React.JSX.Element {
               session={session}
               preview={preview}
               theme={level.theme}
+              muted={preferences.muted}
+              reducedMotion={preferences.reducedMotion}
               placementKind={placementKind}
               relocationUnitId={relocationUnitId}
               onBoardCell={handleBoardCell}
@@ -415,7 +443,7 @@ export function BattlefieldPage(): React.JSX.Element {
                   applyFormula();
                 }
               }}
-              aria-describedby="formula-help"
+              aria-describedby={preferences.hints ? 'formula-help' : undefined}
             />
             {state.mode === 'ready' && (
               <button className="button button-primary" type="button" onClick={start}>
@@ -466,10 +494,12 @@ export function BattlefieldPage(): React.JSX.Element {
             )}
           </div>
           <div className="formula-lab-meta">
-            <span id="formula-help">
-              Đi qua (0, 0) · tự động phóng khi có mục tiêu · thử <code>0.5x</code> hoặc{' '}
-              <code>-0.08x^2 + 0.6x</code>
-            </span>
+            {preferences.hints && (
+              <span id="formula-help">
+                Đi qua (0, 0) · tự động phóng khi có mục tiêu · thử <code>0.5x</code> hoặc{' '}
+                <code>-0.08x^2 + 0.6x</code>
+              </span>
+            )}
             <span className="formula-feedback" role="status">
               {feedback}
             </span>
